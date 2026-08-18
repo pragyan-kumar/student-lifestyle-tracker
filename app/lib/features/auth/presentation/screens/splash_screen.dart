@@ -3,8 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 
-import '../../core/router/app_router.dart';
-import '../../core/theme/app_theme.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_theme.dart';
 
 /// Splash screen shown on cold launch.
 /// Checks auth state and redirects to onboarding or dashboard.
