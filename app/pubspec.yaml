@@ -1,0 +1,104 @@
+name: lifestyle_tracker
+description: "Student Lifestyle Management Tracker with Carbon Emission Tracking — A Minor Project by Pragyan Kumar & Mannan Jain, BPIT"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ── Navigation ─────────────────────────────────────────────────────────────
+  go_router: ^17.5.0              # Declarative routing with deep link support
+
+  # ── State Management ────────────────────────────────────────────────────────
+  flutter_riverpod: ^3.4.2        # Riverpod for reactive state management
+  riverpod_annotation: ^4.0.6
+
+  # ── Firebase ────────────────────────────────────────────────────────────────
+  firebase_core: ^4.13.0
+  firebase_auth: ^6.5.7           # Authentication (Email, Google OAuth2)
+  cloud_firestore: ^6.8.0         # Realtime sync & user profile storage
+  firebase_messaging: ^16.5.0     # Push notifications for habit reminders
+
+  # ── HTTP & API ──────────────────────────────────────────────────────────────
+  dio: ^5.4.3                     # HTTP client with interceptors for JWT auth
+  retrofit: ^4.1.0                # Type-safe REST client generator
+
+  # ── Local Storage ───────────────────────────────────────────────────────────
+  hive_flutter: ^1.1.0            # Fast local NoSQL storage (offline caching)
+  shared_preferences: ^2.3.0      # Simple key-value store for settings
+
+  # ── UI Components ───────────────────────────────────────────────────────────
+  fl_chart: ^1.2.0               # Beautiful charts for carbon & habit graphs
+  lottie: ^3.1.0                  # Lottie animations for gamification rewards
+  flutter_animate: ^4.5.0         # Micro-animations & transitions
+  shimmer: ^3.0.0                 # Skeleton loading placeholders
+  percent_indicator: ^4.2.3       # Circular & linear progress indicators
+  badges: ^3.1.2                  # Badge overlays for notifications
+  flutter_svg: ^2.0.10            # SVG assets for icons and illustrations
+  cached_network_image: ^3.3.1    # Cached image loading
+
+  # ── Forms & Validation ──────────────────────────────────────────────────────
+  flutter_form_builder: ^11.0.0    # Form building with validation
+  form_builder_validators: ^11.0.0
+
+  # ── Date & Time ─────────────────────────────────────────────────────────────
+  intl: ^0.20.0                   # Internationalisation & date formatting
+  table_calendar: ^3.1.1          # Calendar widget for habit history
+
+  # ── Notifications ───────────────────────────────────────────────────────────
+  flutter_local_notifications: ^22.3.0  # Local push notifications & reminders
+  timezone: ^0.11.1
+
+  # ── Permissions ─────────────────────────────────────────────────────────────
+  permission_handler: ^13.0.1     # Runtime permission requests
+
+  # ── Auth Helpers ────────────────────────────────────────────────────────────
+  google_sign_in: ^7.2.0          # Google OAuth2 sign-in
+  flutter_secure_storage: ^11.0.0  # Secure JWT token storage
+
+  # ── Utils ───────────────────────────────────────────────────────────────────
+  uuid: ^4.4.0                    # UUID generation for local IDs
+  logger: ^2.3.0                  # Structured logging
+  connectivity_plus: ^7.3.1       # Network connectivity detection
+  package_info_plus: ^10.2.1       # App version info
+  url_launcher: ^6.3.0            # Open external links (SDG pages etc.)
+
+  # ── Icons & Fonts ───────────────────────────────────────────────────────────
+  cupertino_icons: ^1.0.8
+  google_fonts: ^8.2.1            # Inter & Poppins for premium typography
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  riverpod_generator: ^4.0.8      # Code generation for Riverpod providers
+  retrofit_generator: ^10.2.8      # Code generation for Retrofit clients
+  build_runner: ^2.4.11           # Run code generators
+  json_serializable: ^6.8.0       # JSON serialization code generation
+  mockito: ^5.4.4                 # Mocking for unit tests
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/animations/         # Lottie JSON animation files
+    - assets/data/               # Static emission factor lookup tables
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
