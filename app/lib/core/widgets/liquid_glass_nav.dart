@@ -64,7 +64,7 @@ class LiquidGlassNavBar extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFF1DB954).withOpacity(0.30)
+                          ? const Color(0xFF00F5D4).withOpacity(0.30)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -75,7 +75,7 @@ class LiquidGlassNavBar extends StatelessWidget {
                           icons[index],
                           size: 22,
                           color: isSelected
-                              ? const Color(0xFF1DB954)
+                              ? const Color(0xFF00F5D4)
                               : Colors.white70,
                         ),
                         if (isSelected) ...[

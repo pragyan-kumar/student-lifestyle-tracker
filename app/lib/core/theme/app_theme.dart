@@ -7,20 +7,20 @@ class AppTheme {
   AppTheme._();
 
   // ── Brand Colour Palette ─────────────────────────────────────────────────
-  static const Color primaryGreen    = Color(0xFF1DB954); // Vibrant eco-green
-  static const Color secondaryTeal   = Color(0xFF00BFA5); // Accent teal
-  static const Color accentAmber     = Color(0xFFFFB300); // Rewards / gamification
-  static const Color errorRed        = Color(0xFFEF5350);
-  static const Color successGreen    = Color(0xFF66BB6A);
-  static const Color warningOrange   = Color(0xFFFF7043);
+  static const Color primaryGreen    = Color(0xFF00F5D4); // Mint Green
+  static const Color secondaryTeal   = Color(0xFF2E6EE1); // Electric Blue
+  static const Color accentAmber     = Color(0xFFDAA520); // Goldenrod — rewards
+  static const Color errorRed        = Color(0xFFDC143C); // Crimson
+  static const Color successGreen    = Color(0xFF00F5D4); // Mint Green (success)
+  static const Color warningOrange   = Color(0xFF9D4EDD); // Neon Purple — streak/warning
 
-  // ── Dark Theme Surfaces ──────────────────────────────────────────────────
-  static const Color darkBackground  = Color(0xFF0D1117); // GitHub-dark style
-  static const Color darkSurface     = Color(0xFF161B22);
-  static const Color darkCard        = Color(0xFF1C2128);
-  static const Color darkBorder      = Color(0xFF30363D);
-  static const Color darkText        = Color(0xFFE6EDF3);
-  static const Color darkTextMuted   = Color(0xFF8B949E);
+  // ── Dark Theme Surfaces ────────────────────────────────────────────
+  static const Color darkBackground  = Color(0xFF08090E); // Near-black
+  static const Color darkSurface     = Color(0xFF111420); // Rich dark blue-tint
+  static const Color darkCard        = Color(0xFF161A28); // Card surface
+  static const Color darkBorder      = Color(0xFF252A3D); // Visible border
+  static const Color darkText        = Color(0xFFEEF2FF); // Near-white cool
+  static const Color darkTextMuted   = Color(0xFF7B82A8); // Muted blue-grey
 
   // ── Light Theme Surfaces ─────────────────────────────────────────────────
   static const Color lightBackground = Color(0xFFF6F8FA);
