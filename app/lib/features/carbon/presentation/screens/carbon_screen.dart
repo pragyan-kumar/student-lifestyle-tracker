@@ -12,9 +12,9 @@ class CarbonScreen extends StatelessWidget {
 
   // Mock data — will come from Riverpod + backend
   static const _breakdown = [
-    _CarbonItem('Commute', 1.8, Icons.directions_bus_rounded, AppTheme.primaryGreen),
-    _CarbonItem('Food',    1.0, Icons.restaurant_rounded,     AppTheme.secondaryTeal),
-    _CarbonItem('Devices', 0.4, Icons.devices_rounded,        AppTheme.accentAmber),
+    _CarbonItem('Commute', 0.0, Icons.directions_bus_rounded, AppTheme.primaryGreen),
+    _CarbonItem('Food',    0.0, Icons.restaurant_rounded,     AppTheme.secondaryTeal),
+    _CarbonItem('Devices', 0.0, Icons.devices_rounded,        AppTheme.accentAmber),
   ];
 
   @override
@@ -59,11 +59,11 @@ class CarbonScreen extends StatelessWidget {
                       children: [
                         Text("Today's Footprint", style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.darkTextMuted)),
                         const SizedBox(height: 4),
-                        Text('${total.toStringAsFixed(1)} kg CO₂', style: theme.textTheme.displayMedium?.copyWith(color: AppTheme.primaryGreen, fontWeight: FontWeight.w700)),
+                        Text('0.0 kg CO₂', style: theme.textTheme.displayMedium?.copyWith(color: AppTheme.primaryGreen, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 8),
                         Text('🌍 Global avg student: 5.8 kg/day', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
                         const SizedBox(height: 4),
-                        Text('You\'re ${((5.8 - total) / 5.8 * 100).round()}% below average!', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.successGreen)),
+                        Text('Log activities to see your footprint', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
                       ],
                     ),
                   ),

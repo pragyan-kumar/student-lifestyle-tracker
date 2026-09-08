@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
+import 'liquid_glass_nav.dart';
 
-/// Persistent shell widget that wraps main tab screens with a bottom navigation bar.
+/// Persistent shell widget that wraps main tab screens with a liquid glass bottom navigation bar.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child});
 
@@ -31,27 +31,16 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     final currentIndex = _locationToIndex(location);
-    final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: AppTheme.darkBackground,
+      extendBody: true, // lets content render behind the floating nav bar
       body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: theme.dividerColor, width: 1)),
-        ),
-        child: NavigationBar(
-          selectedIndex: currentIndex,
-          backgroundColor: theme.colorScheme.surface,
-          indicatorColor: AppTheme.primaryGreen.withOpacity(0.15),
-          onDestinationSelected: (index) {
-            context.go(_navItems[index].route);
-          },
-          destinations: _navItems.map((item) => NavigationDestination(
-            icon: Icon(item.icon, size: 22),
-            selectedIcon: Icon(item.icon, size: 22, color: AppTheme.primaryGreen),
-            label: item.label,
-          )).toList(),
-        ),
+      bottomNavigationBar: LiquidGlassNavBar(
+        currentIndex: currentIndex,
+        icons: _navItems.map((e) => e.icon).toList(),
+        labels: _navItems.map((e) => e.label).toList(),
+        onTap: (index) => context.go(_navItems[index].route),
       ),
     );
   }

@@ -26,8 +26,8 @@ class DashboardScreen extends StatelessWidget {
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Good Morning 🌿', style: theme.textTheme.headlineMedium?.copyWith(color: AppTheme.darkText)),
-                  Text('Monday, 18 Aug 2026', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
+                  Text('Welcome to EcoLife 🌿', style: theme.textTheme.headlineMedium?.copyWith(color: AppTheme.darkText)),
+                  Text('Start logging to see your stats', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
                 ],
               ),
               actions: [
@@ -111,14 +111,14 @@ class _CarbonSummaryCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('3.2', style: Theme.of(context).textTheme.displayLarge?.copyWith(color: AppTheme.primaryGreen, fontWeight: FontWeight.w700)),
+                    Text('0.0', style: Theme.of(context).textTheme.displayLarge?.copyWith(color: AppTheme.primaryGreen, fontWeight: FontWeight.w700)),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6, left: 4),
                       child: Text('kg CO₂', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.darkTextMuted)),
                     ),
                   ],
                 ),
-                Text('↓ 12% less than yesterday', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.successGreen)),
+                Text('Log your first activity to track CO₂', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
               ],
             ),
           ),
@@ -138,7 +138,7 @@ class _PointsWalletCard extends StatelessWidget {
         Expanded(
           child: _StatChip(
             label: 'Points',
-            value: '1,240',
+            value: '0',
             icon: Icons.stars_rounded,
             color: AppTheme.accentAmber,
           ),
@@ -147,7 +147,7 @@ class _PointsWalletCard extends StatelessWidget {
         Expanded(
           child: _StatChip(
             label: 'Streak',
-            value: '7 days',
+            value: '0 days',
             icon: Icons.local_fire_department_rounded,
             color: AppTheme.warningOrange,
           ),
@@ -156,7 +156,7 @@ class _PointsWalletCard extends StatelessWidget {
         Expanded(
           child: _StatChip(
             label: 'Badges',
-            value: '5',
+            value: '0',
             icon: Icons.military_tech_rounded,
             color: AppTheme.secondaryTeal,
           ),
@@ -197,10 +197,10 @@ class _StatChip extends StatelessWidget {
 // ── Habit Progress Row ───────────────────────────────────────────────────────
 class _HabitProgressRow extends StatelessWidget {
   final _habits = const [
-    {'label': 'Sleep', 'icon': Icons.bedtime_rounded, 'value': 0.75, 'detail': '6h / 8h'},
-    {'label': 'Diet',  'icon': Icons.restaurant_rounded, 'value': 1.0, 'detail': 'Logged ✓'},
-    {'label': 'Exercise', 'icon': Icons.directions_run_rounded, 'value': 0.5, 'detail': '15 / 30 min'},
-    {'label': 'Screen', 'icon': Icons.phone_android_rounded, 'value': 0.6, 'detail': '2.4h / 4h'},
+    {'label': 'Sleep', 'icon': Icons.bedtime_rounded, 'value': 0.0, 'detail': 'Not logged'},
+    {'label': 'Diet',  'icon': Icons.restaurant_rounded, 'value': 0.0, 'detail': 'Not logged'},
+    {'label': 'Exercise', 'icon': Icons.directions_run_rounded, 'value': 0.0, 'detail': 'Not logged'},
+    {'label': 'Screen', 'icon': Icons.phone_android_rounded, 'value': 0.0, 'detail': 'Not logged'},
   ];
 
   @override
@@ -259,7 +259,7 @@ class _HabitTile extends StatelessWidget {
 class _WeeklyChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final data = [4.2, 3.8, 5.1, 3.2, 4.7, 2.9, 3.2];
+    final data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return Container(
@@ -325,10 +325,10 @@ class _InsightTipCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('AI Insight', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppTheme.secondaryTeal)),
+                Text('Welcome Tip 👋', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppTheme.secondaryTeal)),
                 const SizedBox(height: 4),
                 Text(
-                  'Switch 2 auto rides this week to metro to save ~1.2 kg CO₂ and earn 40 bonus points!',
+                  'Start by logging your daily habits — sleep, diet, exercise and commute — to earn EcoPoints and track your carbon footprint!',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted),
                 ),
               ],
