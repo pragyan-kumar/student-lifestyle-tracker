@@ -35,7 +35,7 @@ class AppRoutes {
 // ── Riverpod provider for the router ────────────────────────────────────────
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: AppRoutes.splash,
+    initialLocation: AppRoutes.dashboard,
     debugLogDiagnostics: true,
     routes: [
       GoRoute(

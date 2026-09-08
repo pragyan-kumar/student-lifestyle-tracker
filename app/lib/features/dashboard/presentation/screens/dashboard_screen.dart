@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 
 /// Home Dashboard — shows daily summary of habits, carbon footprint, and points.
@@ -29,10 +31,18 @@ class DashboardScreen extends StatelessWidget {
                 ],
               ),
               actions: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppTheme.primaryGreen.withOpacity(0.2),
-                  child: const Icon(Icons.person, color: AppTheme.primaryGreen, size: 20),
+                TextButton.icon(
+                  onPressed: () => context.push(AppRoutes.login),
+                  icon: const Icon(Icons.login_rounded, size: 18, color: AppTheme.primaryGreen),
+                  label: Text(
+                    'Login / Sign Up',
+                    style: theme.textTheme.labelLarge?.copyWith(color: AppTheme.primaryGreen, fontWeight: FontWeight.w600),
+                  ),
+                  style: TextButton.styleFrom(
+                    backgroundColor: AppTheme.primaryGreen.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
                 ),
                 const SizedBox(width: 16),
               ],
