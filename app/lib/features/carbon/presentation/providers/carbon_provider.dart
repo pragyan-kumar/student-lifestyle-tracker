@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/network/dio_client.dart';
+import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../data/datasources/carbon_api_service.dart';
 import '../../data/models/carbon_entry.dart';
 
@@ -60,13 +62,30 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
   @override
   CarbonCalculatorState build() => const CarbonCalculatorState();
 
+  Future<void> _syncToBackend() async {
+    try {
+      final dio = ref.read(dioProvider);
+      final res = await dio.put('/carbon/sync', data: {
+        'transportKg': state.transportKg,
+        'foodKg': state.foodKg,
+        'energyKg': state.energyKg,
+      });
+      print(
+          '[CARBON SYNC SUCCESS] synced total: ${res.data['totalEmissionKg']} kg');
+      ref.refresh(dashboardSummaryProvider);
+    } catch (e) {
+      print('[CARBON SYNC ERROR] $e');
+    }
+  }
+
   // ── Transport ──────────────────────────────────────────────────────────────
 
   Future<void> calculateTransport({
     required String mode,
     required double distanceKm,
   }) async {
-    state = state.copyWith(isLoading: true, clearError: true, clearResult: true);
+    state =
+        state.copyWith(isLoading: true, clearError: true, clearResult: true);
     try {
       double kg = 0.0;
 
@@ -79,16 +98,20 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
           kg = 0.041 * distanceKm;
           break;
         case 'Bus':
-          kg = await _api.estimateFuelCombustion(fuelType: 'dlo', litres: distanceKm * 0.035);
+          kg = await _api.estimateFuelCombustion(
+              fuelType: 'dlo', litres: distanceKm * 0.035);
           break;
         case 'Auto':
-          kg = await _api.estimateFuelCombustion(fuelType: 'lpg', litres: distanceKm * 0.06);
+          kg = await _api.estimateFuelCombustion(
+              fuelType: 'lpg', litres: distanceKm * 0.06);
           break;
         case 'Car':
-          kg = await _api.estimateFuelCombustion(fuelType: 'pet', litres: distanceKm * 0.07);
+          kg = await _api.estimateFuelCombustion(
+              fuelType: 'pet', litres: distanceKm * 0.07);
           break;
         case 'Motorcycle':
-          kg = await _api.estimateFuelCombustion(fuelType: 'pet', litres: distanceKm * 0.04);
+          kg = await _api.estimateFuelCombustion(
+              fuelType: 'pet', litres: distanceKm * 0.04);
           break;
       }
 
@@ -107,6 +130,7 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
         transportKg: state.transportKg + kg,
         todayEntries: [entry, ...state.todayEntries],
       );
+      await _syncToBackend();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Calculation failed: $e');
     }
@@ -117,7 +141,8 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
     required String destination,
     required int passengers,
   }) async {
-    state = state.copyWith(isLoading: true, clearError: true, clearResult: true);
+    state =
+        state.copyWith(isLoading: true, clearError: true, clearResult: true);
     try {
       double kg = await _api.estimateFlight(
         departure: departure,
@@ -141,6 +166,7 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
         transportKg: state.transportKg + kg,
         todayEntries: [entry, ...state.todayEntries],
       );
+      await _syncToBackend();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Calculation failed: $e');
     }
@@ -148,11 +174,11 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
 
   // ── Food ───────────────────────────────────────────────────────────────────
 
-  void calculateFood({
+  Future<void> calculateFood({
     required String foodKey,
     required String foodLabel,
     required double grams,
-  }) {
+  }) async {
     final kg = _api.estimateFood(foodKey: foodKey, grams: grams);
 
     final entry = CarbonEntry(
@@ -169,6 +195,7 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
       foodKg: state.foodKg + kg,
       todayEntries: [entry, ...state.todayEntries],
     );
+    await _syncToBackend();
   }
 
   // ── Energy ─────────────────────────────────────────────────────────────────
@@ -177,7 +204,8 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
     required double kwh,
     required String country,
   }) async {
-    state = state.copyWith(isLoading: true, clearError: true, clearResult: true);
+    state =
+        state.copyWith(isLoading: true, clearError: true, clearResult: true);
     try {
       final kg = await _api.estimateElectricity(kwh: kwh, country: country);
       final entry = CarbonEntry(
@@ -194,6 +222,7 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
         energyKg: state.energyKg + kg,
         todayEntries: [entry, ...state.todayEntries],
       );
+      await _syncToBackend();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Calculation failed: $e');
     }
@@ -204,9 +233,11 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
     required String fuelLabel,
     required double litres,
   }) async {
-    state = state.copyWith(isLoading: true, clearError: true, clearResult: true);
+    state =
+        state.copyWith(isLoading: true, clearError: true, clearResult: true);
     try {
-      final kg = await _api.estimateFuelCombustion(fuelType: fuelType, litres: litres);
+      final kg =
+          await _api.estimateFuelCombustion(fuelType: fuelType, litres: litres);
       final entry = CarbonEntry(
         id: _uuid.v4(),
         module: 'energy',
@@ -221,6 +252,7 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
         energyKg: state.energyKg + kg,
         todayEntries: [entry, ...state.todayEntries],
       );
+      await _syncToBackend();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Calculation failed: $e');
     }
@@ -228,12 +260,16 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
 
   void clearResult() => state = state.copyWith(clearResult: true);
 
-  void reset() => state = const CarbonCalculatorState();
+  Future<void> reset() async {
+    state = const CarbonCalculatorState();
+    await _syncToBackend();
+  }
 }
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 
-final carbonApiServiceProvider = Provider<CarbonApiService>((_) => CarbonApiService());
+final carbonApiServiceProvider =
+    Provider<CarbonApiService>((_) => CarbonApiService());
 
 final carbonCalculatorProvider =
     NotifierProvider<CarbonCalculatorNotifier, CarbonCalculatorState>(

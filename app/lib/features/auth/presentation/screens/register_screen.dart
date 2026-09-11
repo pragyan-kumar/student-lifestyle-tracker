@@ -15,11 +15,11 @@ class RegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
-  final _formKey  = GlobalKey<FormState>();
-  final _nameCtrl  = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
-  final _passCtrl  = TextEditingController();
-  bool _obscure  = true;
+  final _passCtrl = TextEditingController();
+  bool _obscure = true;
   String? _errorMsg;
 
   @override
@@ -59,7 +59,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme   = Theme.of(context);
+    final theme = Theme.of(context);
     final loading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
@@ -67,7 +67,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppTheme.darkText),
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              color: AppTheme.darkText),
           onPressed: loading ? null : () => context.go(AppRoutes.login),
         ),
       ),
@@ -79,11 +80,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Create account 🌱', style: theme.textTheme.headlineLarge?.copyWith(color: AppTheme.darkText))
-                  .animate().fadeIn(),
+                Text('Create account 🌱',
+                        style: theme.textTheme.headlineLarge
+                            ?.copyWith(color: AppTheme.darkText))
+                    .animate()
+                    .fadeIn(),
                 const SizedBox(height: 8),
-                Text('Join thousands of eco-conscious students', style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.darkTextMuted))
-                  .animate().fadeIn(delay: 100.ms),
+                Text('Join thousands of eco-conscious students',
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: AppTheme.darkTextMuted))
+                    .animate()
+                    .fadeIn(delay: 100.ms),
 
                 const SizedBox(height: 40),
 
@@ -94,13 +101,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     decoration: BoxDecoration(
                       color: AppTheme.errorRed.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.errorRed.withOpacity(0.5)),
+                      border:
+                          Border.all(color: AppTheme.errorRed.withOpacity(0.5)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline_rounded, color: AppTheme.errorRed, size: 18),
+                        const Icon(Icons.error_outline_rounded,
+                            color: AppTheme.errorRed, size: 18),
                         const SizedBox(width: 8),
-                        Expanded(child: Text(_errorMsg!, style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.errorRed))),
+                        Expanded(
+                            child: Text(_errorMsg!,
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(color: AppTheme.errorRed))),
                       ],
                     ),
                   ),
@@ -110,9 +122,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextFormField(
                   controller: _nameCtrl,
                   style: const TextStyle(color: AppTheme.darkText),
-                  decoration: const InputDecoration(labelText: 'Full Name', prefixIcon: Icon(Icons.person_outline, color: AppTheme.darkTextMuted)),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Enter your name' : null,
-                ).animate().slideX(begin: -0.2, delay: 200.ms, duration: 400.ms),
+                  decoration: const InputDecoration(
+                      labelText: 'Full Name',
+                      prefixIcon: Icon(Icons.person_outline,
+                          color: AppTheme.darkTextMuted)),
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Enter your name' : null,
+                )
+                    .animate()
+                    .slideX(begin: -0.2, delay: 200.ms, duration: 400.ms),
 
                 const SizedBox(height: 16),
 
@@ -120,9 +138,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
                   style: const TextStyle(color: AppTheme.darkText),
-                  decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined, color: AppTheme.darkTextMuted)),
-                  validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
-                ).animate().slideX(begin: -0.2, delay: 300.ms, duration: 400.ms),
+                  decoration: const InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email_outlined,
+                          color: AppTheme.darkTextMuted)),
+                  validator: (v) => (v == null || !v.contains('@'))
+                      ? 'Enter a valid email'
+                      : null,
+                )
+                    .animate()
+                    .slideX(begin: -0.2, delay: 300.ms, duration: 400.ms),
 
                 const SizedBox(height: 16),
 
@@ -132,14 +157,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   style: const TextStyle(color: AppTheme.darkText),
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.darkTextMuted),
+                    prefixIcon: const Icon(Icons.lock_outline,
+                        color: AppTheme.darkTextMuted),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: AppTheme.darkTextMuted),
+                      icon: Icon(
+                          _obscure ? Icons.visibility_off : Icons.visibility,
+                          color: AppTheme.darkTextMuted),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
-                  validator: (v) => (v == null || v.length < 6) ? 'Minimum 6 characters' : null,
-                ).animate().slideX(begin: -0.2, delay: 400.ms, duration: 400.ms),
+                  validator: (v) => (v == null || v.length < 6)
+                      ? 'Minimum 6 characters'
+                      : null,
+                )
+                    .animate()
+                    .slideX(begin: -0.2, delay: 400.ms, duration: 400.ms),
 
                 const SizedBox(height: 32),
 
@@ -148,7 +180,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: ElevatedButton(
                     onPressed: loading ? null : _register,
                     child: loading
-                        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.black))
                         : const Text('Create Account'),
                   ),
                 ).animate().fadeIn(delay: 500.ms),
@@ -161,9 +197,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     child: RichText(
                       text: TextSpan(
                         text: 'Already have an account? ',
-                        style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.darkTextMuted),
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: AppTheme.darkTextMuted),
                         children: [
-                          TextSpan(text: 'Sign In', style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.primaryGreen, fontWeight: FontWeight.w600)),
+                          TextSpan(
+                              text: 'Sign In',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: AppTheme.primaryGreen,
+                                  fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),

@@ -33,6 +33,19 @@ exports.getLogs = async (req, res) => {
   }
 };
 
+const { syncHabitsToFirebase } = require("../services/firebaseSync.service");
+
+function normalizeHabitKey(key) {
+  if (!key || typeof key !== "string") return null;
+  const k = key.replace(/–/g, "-").trim().toLowerCase();
+  if (k.includes("sleep")) return "Sleep (6–9h)";
+  if (k.includes("meal") || k.includes("diet")) return "Healthy Meal";
+  if (k.includes("exercise")) return "Exercise (30 min)";
+  if (k.includes("screen")) return "Screen Time < 4h";
+  if (k.includes("water")) return "Water (8 glasses)";
+  return key;
+}
+
 // GET /api/v1/habits/today
 exports.getToday = async (req, res) => {
   try {
@@ -47,23 +60,196 @@ exports.getToday = async (req, res) => {
     }).sort({ createdAt: -1 });
 
     const checklist = {
-      "Sleep (6–9h)": log?.sleep?.hours >= 6 && log?.sleep?.hours <= 9,
-      "Healthy Meal":
-        log?.diet?.mealType && log?.diet?.mealType !== "meat_heavy",
-      "Exercise (30 min)": log?.exercise?.durationMins >= 30,
-      "Screen Time < 4h":
-        log?.screenTime?.hours != null && log?.screenTime?.hours <= 4,
-      "Water (8 glasses)": (log?.diet?.waterGlasses || 0) >= 8,
+      "Sleep (6–9h)": !!(
+        log?.checklist?.["Sleep (6–9h)"] ??
+        (log?.sleep?.hours >= 6 && log?.sleep?.hours <= 9)
+      ),
+      "Healthy Meal": !!(
+        log?.checklist?.["Healthy Meal"] ??
+        (log?.diet?.mealType && log?.diet?.mealType !== "meat_heavy")
+      ),
+      "Exercise (30 min)": !!(
+        log?.checklist?.["Exercise (30 min)"] ??
+        log?.exercise?.durationMins >= 30
+      ),
+      "Screen Time < 4h": !!(
+        log?.checklist?.["Screen Time < 4h"] ??
+        (log?.screenTime?.hours != null && log?.screenTime?.hours <= 4)
+      ),
+      "Water (8 glasses)": !!(
+        log?.checklist?.["Water (8 glasses)"] ??
+        (log?.diet?.waterGlasses || 0) >= 8
+      ),
     };
+
+    const completedCount = Object.values(checklist).filter(Boolean).length;
+    const totalCount = 5;
+    const percent = Math.round((completedCount / totalCount) * 100);
 
     res.json({
       hasLoggedToday: !!log,
       log,
       checklist,
+      completedCount,
+      totalCount,
+      percent,
     });
   } catch (err) {
     logger.error("Get today habit error:", err);
     res.status(500).json({ error: "Failed to fetch today's habit log" });
+  }
+};
+
+// POST /api/v1/habits/checklist/toggle
+exports.toggleChecklist = async (req, res) => {
+  try {
+    const { habit, done } = req.body;
+    if (!habit) {
+      return res.status(400).json({ error: "Habit name is required" });
+    }
+
+    const canonicalKey = normalizeHabitKey(habit);
+    if (!canonicalKey) {
+      return res.status(400).json({ error: `Unknown habit: ${habit}` });
+    }
+
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    let log = await HabitLog.findOne({
+      userId: req.user._id,
+      date: { $gte: start, $lte: end },
+    }).sort({ createdAt: -1 });
+
+    if (!log) {
+      log = new HabitLog({
+        userId: req.user._id,
+        date: new Date(),
+        checklist: {
+          "Sleep (6–9h)": false,
+          "Healthy Meal": false,
+          "Exercise (30 min)": false,
+          "Screen Time < 4h": false,
+          "Water (8 glasses)": false,
+        },
+      });
+    }
+
+    if (!log.checklist) {
+      log.checklist = {};
+    }
+
+    const isDone =
+      done === undefined ? !log.checklist[canonicalKey] : Boolean(done);
+    log.checklist[canonicalKey] = isDone;
+
+    // Sync corresponding field values
+    if (canonicalKey === "Sleep (6–9h)") {
+      log.sleep = isDone
+        ? { hours: 8, quality: "good", bedtime: "23:00", wakeTime: "07:00" }
+        : { hours: 0, quality: null };
+    } else if (canonicalKey === "Healthy Meal") {
+      log.diet = log.diet || {};
+      log.diet.mealType = isDone ? "vegan" : null;
+      log.diet.mealsLogged = isDone ? 1 : 0;
+    } else if (canonicalKey === "Exercise (30 min)") {
+      log.exercise = isDone
+        ? { durationMins: 30, completed: true, type: "walk" }
+        : { durationMins: 0, completed: false };
+    } else if (canonicalKey === "Screen Time < 4h") {
+      log.screenTime = isDone ? { hours: 3 } : { hours: null };
+    } else if (canonicalKey === "Water (8 glasses)") {
+      log.diet = log.diet || {};
+      log.diet.waterGlasses = isDone ? 8 : 0;
+    }
+
+    // Recalculate flags
+    log.flags = detectFlags({
+      sleep: log.sleep,
+      diet: log.diet,
+      exercise: log.exercise,
+      screenTime: log.screenTime,
+    });
+
+    // Recompute points
+    const previousPoints = log.pointsEarned || 0;
+    const newPoints = calculateHabitPoints({
+      sleep: log.sleep,
+      diet: log.diet,
+      exercise: log.exercise,
+      screenTime: log.screenTime,
+      flags: log.flags,
+    });
+    log.pointsEarned = newPoints;
+    const pointDelta = newPoints - previousPoints;
+
+    log.markModified("checklist");
+    log.markModified("sleep");
+    log.markModified("diet");
+    log.markModified("exercise");
+    log.markModified("screenTime");
+    await log.save();
+
+    // Update user streak and points
+    const user = await User.findById(req.user._id);
+    if (user) {
+      if (isDone) {
+        const newStreak = calculateNewStreak(
+          user.lastActivityDate,
+          user.streakDays || 0,
+        );
+        user.streakDays = newStreak;
+        user.lastActivityDate = new Date();
+      }
+      user.points = Math.max(0, (user.points || 0) + pointDelta);
+      await user.save();
+    }
+
+    const currentChecklist = {
+      "Sleep (6–9h)": Boolean(log.checklist?.["Sleep (6–9h)"]),
+      "Healthy Meal": Boolean(log.checklist?.["Healthy Meal"]),
+      "Exercise (30 min)": Boolean(log.checklist?.["Exercise (30 min)"]),
+      "Screen Time < 4h": Boolean(log.checklist?.["Screen Time < 4h"]),
+      "Water (8 glasses)": Boolean(log.checklist?.["Water (8 glasses)"]),
+    };
+
+    const completedCount =
+      Object.values(currentChecklist).filter(Boolean).length;
+    const totalCount = 5;
+    const percent = Math.round((completedCount / totalCount) * 100);
+
+    // Sync to Firebase RTDB in background
+    syncHabitsToFirebase(req.user._id.toString(), {
+      checklist: currentChecklist,
+      habitLog: log,
+      user,
+    }).catch((err) =>
+      logger.warn("Background Firebase RTDB sync failed:", err.message),
+    );
+
+    logger.info(
+      `Toggled habit '${canonicalKey}' to ${isDone} for user ${req.user._id}`,
+    );
+
+    res.json({
+      success: true,
+      habit: canonicalKey,
+      done: isDone,
+      checklist: currentChecklist,
+      completedCount,
+      totalCount,
+      percent,
+      pointsEarned: log.pointsEarned,
+      user: {
+        points: user?.points || 0,
+        streakDays: user?.streakDays || 0,
+      },
+    });
+  } catch (err) {
+    logger.error("Toggle checklist error:", err);
+    res.status(500).json({ error: "Failed to toggle habit checklist" });
   }
 };
 
@@ -83,6 +269,16 @@ exports.createLog = async (req, res) => {
       flags,
     });
 
+    const checklist = {
+      "Sleep (6–9h)": !!(sleep?.hours >= 6 && sleep?.hours <= 9),
+      "Healthy Meal": !!(diet?.mealType && diet?.mealType !== "meat_heavy"),
+      "Exercise (30 min)": !!(exercise?.durationMins >= 30),
+      "Screen Time < 4h": !!(
+        screenTime?.hours != null && screenTime?.hours <= 4
+      ),
+      "Water (8 glasses)": !!((diet?.waterGlasses || 0) >= 8),
+    };
+
     const log = await HabitLog.create({
       userId: req.user._id,
       sleep,
@@ -90,6 +286,7 @@ exports.createLog = async (req, res) => {
       exercise,
       screenTime,
       flags,
+      checklist,
       pointsEarned,
     });
 
@@ -106,12 +303,26 @@ exports.createLog = async (req, res) => {
       await user.save();
     }
 
+    // Sync to Firebase RTDB
+    syncHabitsToFirebase(req.user._id.toString(), {
+      checklist,
+      habitLog: log,
+      user,
+    }).catch((err) =>
+      logger.warn("Background Firebase RTDB sync failed:", err.message),
+    );
+
     logger.info(
       `Habit log created for user ${req.user._id}, +${pointsEarned} pts, streak: ${user?.streakDays || 1}`,
     );
     res
       .status(201)
-      .json({ log, pointsEarned, streakDays: user?.streakDays || 1 });
+      .json({
+        log,
+        checklist,
+        pointsEarned,
+        streakDays: user?.streakDays || 1,
+      });
   } catch (err) {
     logger.error("Create habit log error:", err);
     res.status(500).json({ error: "Failed to create habit log" });

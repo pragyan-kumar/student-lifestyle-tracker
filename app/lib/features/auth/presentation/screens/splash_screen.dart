@@ -69,7 +69,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 color: AppTheme.primaryGreen.withOpacity(0.15),
                 shape: BoxShape.circle,
                 border: Border.all(color: AppTheme.primaryGreen, width: 2),
-                boxShadow: [BoxShadow(color: AppTheme.primaryGreen.withOpacity(0.3), blurRadius: 24)],
+                boxShadow: [
+                  BoxShadow(
+                      color: AppTheme.primaryGreen.withOpacity(0.3),
+                      blurRadius: 24)
+                ],
               ),
               child: const Icon(
                 Icons.eco_rounded,
@@ -77,9 +81,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 color: AppTheme.primaryGreen,
               ),
             ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
-
             const SizedBox(height: 24),
-
             Text(
               'EcoLife',
               style: theme.textTheme.displayMedium?.copyWith(
@@ -87,18 +89,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 fontWeight: FontWeight.w700,
               ),
             ).animate().fadeIn(delay: 300.ms, duration: 600.ms),
-
             const SizedBox(height: 8),
-
             Text(
               'Track habits. Cut carbon. Earn rewards.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppTheme.darkTextMuted,
               ),
             ).animate().fadeIn(delay: 500.ms, duration: 600.ms),
-
             const SizedBox(height: 48),
-
             SizedBox(
               width: 32,
               height: 32,

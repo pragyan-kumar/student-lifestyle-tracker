@@ -12,6 +12,9 @@ router.get("/", habitCtrl.getLogs);
 // GET  /api/v1/habits/today     — today's logged checklist and completion
 router.get("/today", habitCtrl.getToday);
 
+// POST /api/v1/habits/checklist/toggle — toggle single habit in checklist
+router.post("/checklist/toggle", habitCtrl.toggleChecklist);
+
 // POST /api/v1/habits           — create today's habit log
 router.post("/", habitCtrl.createLog);
 
