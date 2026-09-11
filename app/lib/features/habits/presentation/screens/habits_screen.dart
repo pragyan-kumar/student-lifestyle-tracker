@@ -21,9 +21,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
   // Habit completion state — will come from Riverpod provider
   final Map<String, bool> _todayHabits = {
     'Sleep (6–9h)': false,
-    'Healthy Meal': true,
+    'Healthy Meal': false,
     'Exercise (30 min)': false,
-    'Screen Time < 4h': true,
+    'Screen Time < 4h': false,
     'Water (8 glasses)': false,
   };
 

@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../providers/auth_provider.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>();
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final _formKey  = GlobalKey<FormState>();
   final _nameCtrl  = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl  = TextEditingController();
-  bool _obscure = true;
-  bool _loading = false;
+  bool _obscure  = true;
+  String? _errorMsg;
 
   @override
   void dispose() {
@@ -30,18 +32,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-    // TODO: call AuthRepository.register(name, email, password)
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() => _loading = false);
-      context.go(AppRoutes.dashboard);
+    setState(() => _errorMsg = null);
+
+    await ref.read(authProvider.notifier).register(
+          name: _nameCtrl.text.trim(),
+          email: _emailCtrl.text.trim(),
+          password: _passCtrl.text,
+        );
+
+    if (!mounted) return;
+    final authState = ref.read(authProvider);
+    if (authState.hasError) {
+      setState(() {
+        final err = authState.error.toString();
+        if (err.contains('409') || err.contains('already')) {
+          _errorMsg = 'An account with this email already exists.';
+        } else if (err.contains('network') || err.contains('SocketException')) {
+          _errorMsg = 'No internet connection.';
+        } else {
+          _errorMsg = 'Registration failed. Please try again.';
+        }
+      });
     }
+    // On success, the router redirect handles navigation automatically.
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme   = Theme.of(context);
+    final loading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -49,7 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_rounded, color: AppTheme.darkText),
-          onPressed: () => context.go(AppRoutes.login),
+          onPressed: loading ? null : () => context.go(AppRoutes.login),
         ),
       ),
       body: SafeArea(
@@ -67,6 +86,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   .animate().fadeIn(delay: 100.ms),
 
                 const SizedBox(height: 40),
+
+                // Error banner
+                if (_errorMsg != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorRed.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.errorRed.withOpacity(0.5)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline_rounded, color: AppTheme.errorRed, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(_errorMsg!, style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.errorRed))),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
 
                 TextFormField(
                   controller: _nameCtrl,
@@ -107,8 +146,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _loading ? null : _register,
-                    child: _loading
+                    onPressed: loading ? null : _register,
+                    child: loading
                         ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
                         : const Text('Create Account'),
                   ),
@@ -118,7 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 Center(
                   child: GestureDetector(
-                    onTap: () => context.go(AppRoutes.login),
+                    onTap: loading ? null : () => context.go(AppRoutes.login),
                     child: RichText(
                       text: TextSpan(
                         text: 'Already have an account? ',

@@ -14,6 +14,7 @@ import '../../features/carbon/presentation/screens/log_carbon_screen.dart';
 import '../../features/insights/presentation/screens/insights_screen.dart';
 import '../../features/gamification/presentation/screens/rewards_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../widgets/app_shell.dart';
 
 // ── Route name constants ─────────────────────────────────────────────────────
@@ -34,9 +35,38 @@ class AppRoutes {
 
 // ── Riverpod provider for the router ────────────────────────────────────────
 final appRouterProvider = Provider<GoRouter>((ref) {
+  // Listen to auth state so the router refreshes on login/logout.
+  final authNotifier = ref.watch(authProvider.notifier);
+
+  // A Listenable that GoRouter can subscribe to for redirects.
+  final routerRefreshNotifier = _AuthRefreshNotifier(ref);
+
   return GoRouter(
-    initialLocation: AppRoutes.dashboard,
+    initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
+    refreshListenable: routerRefreshNotifier,
+    redirect: (context, state) {
+      final authState = ref.read(authProvider);
+
+      // While auth is loading (restoring session) stay on splash.
+      if (authState.isLoading) {
+        return state.matchedLocation == AppRoutes.splash ? null : AppRoutes.splash;
+      }
+
+      final isLoggedIn    = authState.value != null;
+      final isAuthRoute   = state.matchedLocation == AppRoutes.login ||
+                            state.matchedLocation == AppRoutes.register ||
+                            state.matchedLocation == AppRoutes.onboarding ||
+                            state.matchedLocation == AppRoutes.splash;
+
+      // If logged in and trying to access auth screens → go to dashboard.
+      if (isLoggedIn && isAuthRoute) return AppRoutes.dashboard;
+
+      // If NOT logged in and trying to access a protected route → go to login.
+      if (!isLoggedIn && !isAuthRoute) return AppRoutes.login;
+
+      return null; // No redirect needed.
+    },
     routes: [
       GoRoute(
         path: AppRoutes.splash,
@@ -100,3 +130,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// A [ChangeNotifier] that fires whenever the auth state changes,
+/// so GoRouter re-evaluates its redirect logic.
+class _AuthRefreshNotifier extends ChangeNotifier {
+  _AuthRefreshNotifier(Ref ref) {
+    ref.listen(authProvider, (_, __) => notifyListeners());
+  }
+}

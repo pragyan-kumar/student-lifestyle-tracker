@@ -1,5 +1,5 @@
 const jwt          = require('jsonwebtoken');
-const admin        = require('firebase-admin');
+const { admin, isFirebaseConfigured } = require('../config/firebase');
 const User         = require('../models/user.model');
 const { logger }   = require('../utils/logger');
 
@@ -53,6 +53,14 @@ exports.login = async (req, res) => {
 exports.googleAuth = async (req, res) => {
   try {
     const { idToken } = req.body;
+    if (!idToken) return res.status(400).json({ error: 'idToken is required' });
+
+    if (!isFirebaseConfigured || !admin) {
+      return res.status(503).json({
+        error: 'Firebase Admin is not configured with valid service account credentials on this server',
+      });
+    }
+
     const decoded = await admin.auth().verifyIdToken(idToken);
 
     let user = await User.findOne({ firebaseUid: decoded.uid });

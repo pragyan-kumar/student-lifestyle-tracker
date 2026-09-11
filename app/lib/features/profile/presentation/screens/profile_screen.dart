@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// User profile screen.
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final user  = ref.watch(authProvider).value;
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -31,11 +36,14 @@ class ProfileScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 48,
                     backgroundColor: AppTheme.primaryGreen.withOpacity(0.15),
-                    child: const Icon(Icons.person_rounded, size: 52, color: AppTheme.primaryGreen),
+                    child: Text(
+                      (user?.name.isNotEmpty == true) ? user!.name[0].toUpperCase() : '?',
+                      style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, color: AppTheme.primaryGreen),
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  Text('Pragyan Kumar', style: theme.textTheme.headlineMedium?.copyWith(color: AppTheme.darkText)),
-                  Text('01320815723 · BPIT CSE-DS \'27', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
+                  Text(user?.name ?? 'Guest', style: theme.textTheme.headlineMedium?.copyWith(color: AppTheme.darkText)),
+                  Text(user?.email ?? '', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -44,7 +52,7 @@ class ProfileScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: AppTheme.accentAmber.withOpacity(0.4)),
                     ),
-                    child: Text('⭐ 1,240 EcoPoints', style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.accentAmber, fontWeight: FontWeight.w600)),
+                    child: Text('⭐ ${user?.points ?? 0} EcoPoints', style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.accentAmber, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -55,11 +63,11 @@ class ProfileScreen extends StatelessWidget {
             // Stats grid
             Row(
               children: [
-                _ProfileStat(value: '7', label: 'Day Streak', icon: Icons.local_fire_department_rounded, color: AppTheme.warningOrange),
+                _ProfileStat(value: '${user?.streakDays ?? 0}', label: 'Day Streak', icon: Icons.local_fire_department_rounded, color: AppTheme.warningOrange),
                 const SizedBox(width: 12),
-                _ProfileStat(value: '5', label: 'Badges', icon: Icons.military_tech_rounded, color: AppTheme.accentAmber),
+                _ProfileStat(value: '${user?.badgesCount ?? 0}', label: 'Badges', icon: Icons.military_tech_rounded, color: AppTheme.accentAmber),
                 const SizedBox(width: 12),
-                _ProfileStat(value: '12.4', label: 'kg CO₂ saved', icon: Icons.eco_rounded, color: AppTheme.primaryGreen),
+                _ProfileStat(value: '0.0', label: 'kg CO₂ saved', icon: Icons.eco_rounded, color: AppTheme.primaryGreen),
               ],
             ).animate(delay: 150.ms).fadeIn(),
 
@@ -83,7 +91,12 @@ class ProfileScreen extends StatelessWidget {
                   leading: Icon(icon, color: color, size: 22),
                   title: Text(label, style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.darkText)),
                   trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.darkTextMuted),
-                  onTap: () {},
+                  onTap: label == 'Sign Out'
+                      ? () async {
+                          await ref.read(authProvider.notifier).logout();
+                          if (context.mounted) context.go(AppRoutes.login);
+                        }
+                      : () {},
                 ).animate(delay: Duration(milliseconds: 200 + e.key * 40)).fadeIn().slideX(begin: 0.05),
               );
             }),

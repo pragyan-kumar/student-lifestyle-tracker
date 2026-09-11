@@ -1,9 +1,16 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 /// App-wide constants.
 class AppConstants {
   AppConstants._();
 
   // ── API ─────────────────────────────────────────────────────────────────
-  static const String baseUrl             = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:5000/api/v1');
+  /// On web/desktop use localhost; on Android emulator use 10.0.2.2.
+  static String get baseUrl {
+    const envUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    if (envUrl.isNotEmpty) return envUrl;
+    return kIsWeb ? 'http://localhost:5000/api/v1' : 'http://10.0.2.2:5000/api/v1';
+  }
   static const String carbonInterfaceUrl  = 'https://www.carboninterface.com/api/v1';
   static const int    connectTimeout      = 30000; // ms
   static const int    receiveTimeout      = 30000;

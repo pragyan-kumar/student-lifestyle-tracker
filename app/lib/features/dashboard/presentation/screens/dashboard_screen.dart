@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Home Dashboard — shows daily summary of habits, carbon footprint, and points.
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final user  = ref.watch(authProvider).value;
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -61,32 +64,41 @@ class DashboardScreen extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      // Login button
-                      GestureDetector(
-                        onTap: () => context.push(AppRoutes.login),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(colors: [
-                              AppTheme.primaryGreen.withOpacity(0.25),
-                              AppTheme.secondaryTeal.withOpacity(0.15),
-                            ]),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.6)),
-                            boxShadow: [BoxShadow(color: AppTheme.primaryGreen.withOpacity(0.2), blurRadius: 8)],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.login_rounded, size: 12, color: AppTheme.primaryGreen),
-                              const SizedBox(width: 5),
-                              Text('Login / Sign Up', style: TextStyle(
-                                fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.primaryGreen,
-                              )),
-                            ],
+                      // User avatar / profile button (shown when logged in)
+                      if (user != null)
+                        GestureDetector(
+                          onTap: () => context.go(AppRoutes.profile),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(colors: [
+                                AppTheme.primaryGreen.withOpacity(0.25),
+                                AppTheme.secondaryTeal.withOpacity(0.15),
+                              ]),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.6)),
+                              boxShadow: [BoxShadow(color: AppTheme.primaryGreen.withOpacity(0.2), blurRadius: 8)],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircleAvatar(
+                                  radius: 10,
+                                  backgroundColor: AppTheme.primaryGreen.withOpacity(0.3),
+                                  child: Text(
+                                    user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+                                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.primaryGreen),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  user.name.split(' ').first,
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.primaryGreen),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
