@@ -27,9 +27,9 @@ class LiquidGlassNavBar extends StatelessWidget {
             height: 64,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(28),
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withOpacity(0.15),
               border: Border.all(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withOpacity(0.3),
                 width: 1.2,
               ),
               boxShadow: [
@@ -43,8 +43,8 @@ class LiquidGlassNavBar extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(0.10),
-                  Colors.white.withOpacity(0.03),
+                  Colors.white.withOpacity(0.25),
+                  Colors.white.withOpacity(0.05),
                 ],
               ),
             ),
@@ -64,7 +64,7 @@ class LiquidGlassNavBar extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFF00F5D4).withOpacity(0.30)
+                          ? const Color(0xFF00F5D4).withOpacity(0.22)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -75,7 +75,7 @@ class LiquidGlassNavBar extends StatelessWidget {
                           icons[index],
                           size: 22,
                           color: isSelected
-                              ? const Color(0xFF00F5D4)
+                              ? Colors.white
                               : Colors.white70,
                         ),
                         if (isSelected) ...[
@@ -85,7 +85,7 @@ class LiquidGlassNavBar extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF1DB954),
+                              color: Colors.white,
                             ),
                           ),
                         ],
