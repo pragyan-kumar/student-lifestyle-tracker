@@ -119,7 +119,7 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                         ),
                         const Spacer(),
-                        // User avatar / profile button
+                        // User avatar / profile button — or Login pill when guest
                         if (authUser != null)
                           GestureDetector(
                             onTap: () => context.go(AppRoutes.profile),
@@ -170,6 +170,43 @@ class DashboardScreen extends ConsumerWidget {
                                 ],
                               ),
                             ),
+                          )
+                        else
+                          GestureDetector(
+                            onTap: () => context.go(AppRoutes.login),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(colors: [
+                                  AppTheme.primaryGreen.withOpacity(0.2),
+                                  AppTheme.secondaryTeal.withOpacity(0.1),
+                                ]),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                    color:
+                                        AppTheme.primaryGreen.withOpacity(0.6)),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: AppTheme.primaryGreen
+                                          .withOpacity(0.25),
+                                      blurRadius: 10)
+                                ],
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.login_rounded,
+                                      color: AppTheme.primaryGreen, size: 13),
+                                  SizedBox(width: 5),
+                                  Text('Login',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppTheme.primaryGreen)),
+                                ],
+                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -183,9 +220,14 @@ class DashboardScreen extends ConsumerWidget {
                   delegate: SliverChildListDelegate([
                     // ── Welcome Hero Banner ──────────────────────────────────
                     _WelcomeBanner(
-                      name: authUser?.name.split(' ').first ?? 'Student',
+                      name: authUser?.name.split(' ').first ??
+                          'Wellness Advocate',
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
+
+                    // ── Login / Sign Up prompt (guest only) ─────────────────
+                    if (authUser == null) _LoginPromptCard(),
+                    if (authUser == null) const SizedBox(height: 12),
 
                     // ── Today's Carbon Card ──────────────────────────────
                     _CarbonSummaryCard(
@@ -391,6 +433,107 @@ class _PillBadge extends StatelessWidget {
           style: TextStyle(
               color: color, fontSize: 11, fontWeight: FontWeight.w600)),
     );
+  }
+}
+
+// ── Login / Sign Up Prompt Card (guest mode) ─────────────────────────────────
+class _LoginPromptCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.primaryGreen.withOpacity(0.08),
+            AppTheme.secondaryTeal.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: AppTheme.primaryGreen.withOpacity(0.35), width: 1),
+        boxShadow: [
+          BoxShadow(
+              color: AppTheme.primaryGreen.withOpacity(0.08), blurRadius: 16),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryGreen.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.person_outline_rounded,
+                color: AppTheme.primaryGreen, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Save your progress',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.darkText,
+                          fontWeight: FontWeight.w700,
+                        )),
+                Text('Log in to sync habits & earn rewards',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.darkTextMuted,
+                        )),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => context.go(AppRoutes.login),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGreen,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                          color: AppTheme.primaryGreen.withOpacity(0.4),
+                          blurRadius: 8)
+                    ],
+                  ),
+                  child: const Text('Login',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => context.go(AppRoutes.register),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkCard,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: AppTheme.primaryGreen.withOpacity(0.4)),
+                  ),
+                  child: const Text('Sign Up',
+                      style: TextStyle(
+                          color: AppTheme.primaryGreen,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(begin: 0.05);
   }
 }
 

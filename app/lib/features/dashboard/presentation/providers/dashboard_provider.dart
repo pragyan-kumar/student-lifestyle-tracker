@@ -94,7 +94,7 @@ class DashboardUserStats {
   });
 
   factory DashboardUserStats.empty() => const DashboardUserStats(
-        name: 'Student',
+        name: 'Wellness Advocate',
         email: '',
         points: 0,
         streakDays: 0,

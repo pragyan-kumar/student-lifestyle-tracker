@@ -19,18 +19,18 @@ import '../widgets/app_shell.dart';
 
 // ── Route name constants ─────────────────────────────────────────────────────
 class AppRoutes {
-  static const splash      = '/';
-  static const onboarding  = '/onboarding';
-  static const login       = '/login';
-  static const register    = '/register';
-  static const dashboard   = '/dashboard';
-  static const habits      = '/habits';
-  static const logHabit    = '/habits/log';
-  static const carbon      = '/carbon';
-  static const logCarbon   = '/carbon/log';
-  static const insights    = '/insights';
-  static const rewards     = '/rewards';
-  static const profile     = '/profile';
+  static const splash = '/';
+  static const onboarding = '/onboarding';
+  static const login = '/login';
+  static const register = '/register';
+  static const dashboard = '/dashboard';
+  static const habits = '/habits';
+  static const logHabit = '/habits/log';
+  static const carbon = '/carbon';
+  static const logCarbon = '/carbon/log';
+  static const insights = '/insights';
+  static const rewards = '/rewards';
+  static const profile = '/profile';
 }
 
 // ── Riverpod provider for the router ────────────────────────────────────────
@@ -42,30 +42,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final routerRefreshNotifier = _AuthRefreshNotifier(ref);
 
   return GoRouter(
-    initialLocation: AppRoutes.splash,
+    initialLocation: AppRoutes.onboarding,
     debugLogDiagnostics: true,
     refreshListenable: routerRefreshNotifier,
+    // TODO: Re-enable auth redirect when backend auth is ready.
     redirect: (context, state) {
-      final authState = ref.read(authProvider);
+      // Only splash is fully bypassed — login/register/onboarding are allowed through.
+      if (state.matchedLocation == AppRoutes.splash) return AppRoutes.dashboard;
 
-      // While auth is loading (restoring session) stay on splash.
-      if (authState.isLoading) {
-        return state.matchedLocation == AppRoutes.splash ? null : AppRoutes.splash;
-      }
-
-      final isLoggedIn    = authState.value != null;
-      final isAuthRoute   = state.matchedLocation == AppRoutes.login ||
-                            state.matchedLocation == AppRoutes.register ||
-                            state.matchedLocation == AppRoutes.onboarding ||
-                            state.matchedLocation == AppRoutes.splash;
-
-      // If logged in and trying to access auth screens → go to dashboard.
-      if (isLoggedIn && isAuthRoute) return AppRoutes.dashboard;
-
-      // If NOT logged in and trying to access a protected route → go to login.
-      if (!isLoggedIn && !isAuthRoute) return AppRoutes.login;
-
-      return null; // No redirect needed.
+      // Onboarding is allowed through — navigates to dashboard on Skip/Get Started.
+      return null;
     },
     routes: [
       GoRoute(

@@ -20,13 +20,15 @@ class HabitsNotifier extends AsyncNotifier<HabitChecklistData> {
     final completed = newChecklist.values.where((v) => v).length;
     final percent = ((completed / 5) * 100).round();
 
-    state = AsyncData(previousState.copyWith(
+    final optimisticState = previousState.copyWith(
       checklist: newChecklist,
       completedCount: completed,
       percent: percent,
-    ));
+    );
 
-    // 2. Persist to backend and Firebase RTDB
+    state = AsyncData(optimisticState);
+
+    // 2. Persist to backend — if it fails, keep optimistic state (offline/no-auth mode)
     try {
       final repo = ref.read(habitsRepositoryProvider);
       final updated = await repo.toggleHabit(habit, done);
@@ -37,10 +39,11 @@ class HabitsNotifier extends AsyncNotifier<HabitChecklistData> {
       if (updated.userPoints != null) {
         ref.invalidate(authProvider);
       }
-    } catch (e, st) {
-      // Rollback on error — keep data visible, don't overwrite with AsyncError
-      print('[HabitsProvider] toggle failed, rolling back: $e');
-      state = AsyncData(previousState);
+    } catch (e) {
+      // API failed (e.g. no auth) — keep the optimistic state so the UI stays responsive.
+      print(
+          '[HabitsProvider] toggle API failed (offline/no-auth), keeping local state: $e');
+      state = AsyncData(optimisticState);
     }
   }
 
