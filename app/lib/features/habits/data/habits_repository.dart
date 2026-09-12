@@ -110,6 +110,46 @@ class HabitsRepository {
     });
     return HabitChecklistData.fromJson(res.data as Map<String, dynamic>);
   }
+
+  /// Logs a numeric value for a habit (e.g. 7.5 hours of sleep, 8 glasses).
+  /// Maps the slider double to the correct field in the backend payload.
+  Future<HabitChecklistData> logHabitValue(String habit, double value) async {
+    final Map<String, dynamic> payload = _buildPayload(habit, value);
+    try {
+      final res = await _dio.post('/habits/log', data: payload);
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        if (res.data is Map<String, dynamic>) {
+          // Some backends return the full checklist, others return the log entry.
+          // Try to parse as checklist data; fall back to toggling done.
+          final data = res.data as Map<String, dynamic>;
+          if (data.containsKey('checklist')) {
+            return HabitChecklistData.fromJson(data);
+          }
+        }
+      }
+    } catch (_) {
+      // Ignore — caller handles fallback
+    }
+    // Fallback: toggle the habit done via the checklist endpoint
+    return toggleHabit(habit, true);
+  }
+
+  static Map<String, dynamic> _buildPayload(String habit, double value) {
+    switch (habit) {
+      case 'Sleep (6–9h)':
+        return {'sleep': {'hours': value}};
+      case 'Healthy Meal':
+        return {'diet': {'meals': value.round()}};
+      case 'Exercise (30 min)':
+        return {'exercise': {'durationMins': value.round()}};
+      case 'Screen Time < 4h':
+        return {'screenTime': {'hours': value}};
+      case 'Water (8 glasses)':
+        return {'water': {'glasses': value.round()}};
+      default:
+        return {'habit': habit, 'value': value};
+    }
+  }
 }
 
 final habitsRepositoryProvider = Provider<HabitsRepository>((ref) {

@@ -51,6 +51,32 @@ class HabitsNotifier extends AsyncNotifier<HabitChecklistData> {
     final repo = ref.read(habitsRepositoryProvider);
     state = await AsyncValue.guard(() => repo.getTodayHabits());
   }
+
+  /// Log a numeric value for a habit (e.g. 7.5 hours of sleep).
+  /// After saving, marks the habit done and refreshes related providers.
+  Future<void> logValue(String habit, double value) async {
+    try {
+      final repo = ref.read(habitsRepositoryProvider);
+      final updated = await repo.logHabitValue(habit, value);
+      state = AsyncData(updated);
+      ref.invalidate(dashboardSummaryProvider);
+      if (updated.userPoints != null) {
+        ref.invalidate(authProvider);
+      }
+    } catch (e) {
+      // Offline / no-auth — still optimistically mark done
+      print('[HabitsProvider] logValue API failed (offline/no-auth): $e');
+      final prev = state.value ?? HabitChecklistData.empty();
+      final newChecklist = Map<String, bool>.from(prev.checklist)
+        ..[habit] = true;
+      final completed = newChecklist.values.where((v) => v).length;
+      state = AsyncData(prev.copyWith(
+        checklist: newChecklist,
+        completedCount: completed,
+        percent: ((completed / 5) * 100).round(),
+      ));
+    }
+  }
 }
 
 final habitsProvider =

@@ -9,7 +9,7 @@ class AppConstants {
   static String get baseUrl {
     const envUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
     if (envUrl.isNotEmpty) return envUrl;
-    return kIsWeb ? 'http://localhost:5000/api/v1' : 'http://10.0.2.2:5000/api/v1';
+    return kIsWeb ? 'http://localhost:5001/api/v1' : 'http://10.0.2.2:5001/api/v1';
   }
   static const String carbonInterfaceUrl  = 'https://www.carboninterface.com/api/v1';
   static const int    connectTimeout      = 30000; // ms
