@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -14,11 +15,11 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey  = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl  = TextEditingController();
   bool _obscure = true;
-  bool _loading = false;
+  String? _errorMsg;
 
   @override
   void dispose() {
@@ -29,28 +30,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-    // TODO: call AuthRepository.login(email, password)
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() => _loading = false);
-      context.go(AppRoutes.dashboard);
-    }
-  }
+    setState(() => _errorMsg = null);
 
-  Future<void> _googleSignIn() async {
-    setState(() => _loading = true);
-    // TODO: call AuthRepository.signInWithGoogle()
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() => _loading = false);
-      context.go(AppRoutes.dashboard);
+    await ref.read(authProvider.notifier).login(
+          email: _emailCtrl.text.trim(),
+          password: _passCtrl.text,
+        );
+
+    if (!mounted) return;
+    final authState = ref.read(authProvider);
+    if (authState.hasError) {
+      setState(() {
+        final err = authState.error.toString();
+        if (err.contains('401') || err.contains('credentials') || err.contains('password')) {
+          _errorMsg = 'Invalid email or password.';
+        } else if (err.contains('network') || err.contains('SocketException')) {
+          _errorMsg = 'No internet connection.';
+        } else {
+          _errorMsg = 'Login failed. Please try again.';
+        }
+      });
     }
+    // On success, the router redirect handles navigation automatically.
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme   = Theme.of(context);
+    final loading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
       backgroundColor: AppTheme.darkBackground,
@@ -74,6 +81,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     .animate().fadeIn(delay: 200.ms),
 
                   const SizedBox(height: 40),
+
+                  // Error banner
+                  if (_errorMsg != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.errorRed.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.errorRed.withOpacity(0.5)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline_rounded, color: AppTheme.errorRed, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(_errorMsg!, style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.errorRed))),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
 
                   // Email field
                   TextFormField(
@@ -111,8 +138,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _loading ? null : _login,
-                      child: _loading
+                      onPressed: loading ? null : _login,
+                      child: loading
                           ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
                           : const Text('Sign In'),
                     ),
@@ -130,30 +157,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const Expanded(child: Divider()),
                   ]),
 
-                  const SizedBox(height: 16),
-
-                  // Google sign-in
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _loading ? null : _googleSignIn,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.darkText,
-                        side: const BorderSide(color: AppTheme.darkBorder),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      icon: const Icon(Icons.g_mobiledata_rounded, size: 24),
-                      label: const Text('Continue with Google'),
-                    ),
-                  ).animate().fadeIn(delay: 600.ms),
-
                   const SizedBox(height: 32),
 
                   // Register link
                   Center(
                     child: GestureDetector(
-                      onTap: () => context.go(AppRoutes.register),
+                      onTap: loading ? null : () => context.go(AppRoutes.register),
                       child: RichText(
                         text: TextSpan(
                           text: "Don't have an account? ",

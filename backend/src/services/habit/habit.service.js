@@ -34,4 +34,50 @@ const calculateHabitPoints = ({ sleep, diet, exercise, screenTime, flags = {} } 
   return pts;
 };
 
-module.exports = { detectFlags, calculateHabitPoints };
+/**
+ * Date helper functions for calendar streaks.
+ */
+const isSameCalendarDay = (d1, d2) => {
+  if (!d1 || !d2) return false;
+  const a = new Date(d1);
+  const b = new Date(d2);
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+};
+
+const isYesterday = (d1, d2) => {
+  if (!d1 || !d2) return false;
+  const yesterday = new Date(d2);
+  yesterday.setDate(yesterday.getDate() - 1);
+  return isSameCalendarDay(d1, yesterday);
+};
+
+/**
+ * Determines updated streak count based on last activity timestamp.
+ */
+const calculateNewStreak = (lastActivityDate, currentStreak = 0, now = new Date()) => {
+  if (!lastActivityDate) {
+    return 1;
+  }
+  if (isSameCalendarDay(lastActivityDate, now)) {
+    return Math.max(1, currentStreak);
+  }
+  if (isYesterday(lastActivityDate, now)) {
+    return currentStreak + 1;
+  }
+  // Missed more than a day
+  return 1;
+};
+
+module.exports = {
+  detectFlags,
+  calculateHabitPoints,
+  isSameCalendarDay,
+  isYesterday,
+  calculateNewStreak,
+  APP_CONSTANTS,
+  POINTS,
+};

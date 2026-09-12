@@ -14,29 +14,45 @@ import '../../features/carbon/presentation/screens/log_carbon_screen.dart';
 import '../../features/insights/presentation/screens/insights_screen.dart';
 import '../../features/gamification/presentation/screens/rewards_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../widgets/app_shell.dart';
 
 // ── Route name constants ─────────────────────────────────────────────────────
 class AppRoutes {
-  static const splash      = '/';
-  static const onboarding  = '/onboarding';
-  static const login       = '/login';
-  static const register    = '/register';
-  static const dashboard   = '/dashboard';
-  static const habits      = '/habits';
-  static const logHabit    = '/habits/log';
-  static const carbon      = '/carbon';
-  static const logCarbon   = '/carbon/log';
-  static const insights    = '/insights';
-  static const rewards     = '/rewards';
-  static const profile     = '/profile';
+  static const splash = '/';
+  static const onboarding = '/onboarding';
+  static const login = '/login';
+  static const register = '/register';
+  static const dashboard = '/dashboard';
+  static const habits = '/habits';
+  static const logHabit = '/habits/log';
+  static const carbon = '/carbon';
+  static const logCarbon = '/carbon/log';
+  static const insights = '/insights';
+  static const rewards = '/rewards';
+  static const profile = '/profile';
 }
 
 // ── Riverpod provider for the router ────────────────────────────────────────
 final appRouterProvider = Provider<GoRouter>((ref) {
+  // Listen to auth state so the router refreshes on login/logout.
+  final authNotifier = ref.watch(authProvider.notifier);
+
+  // A Listenable that GoRouter can subscribe to for redirects.
+  final routerRefreshNotifier = _AuthRefreshNotifier(ref);
+
   return GoRouter(
-    initialLocation: AppRoutes.dashboard,
+    initialLocation: AppRoutes.onboarding,
     debugLogDiagnostics: true,
+    refreshListenable: routerRefreshNotifier,
+    // TODO: Re-enable auth redirect when backend auth is ready.
+    redirect: (context, state) {
+      // Only splash is fully bypassed — login/register/onboarding are allowed through.
+      if (state.matchedLocation == AppRoutes.splash) return AppRoutes.dashboard;
+
+      // Onboarding is allowed through — navigates to dashboard on Skip/Get Started.
+      return null;
+    },
     routes: [
       GoRoute(
         path: AppRoutes.splash,
@@ -100,3 +116,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// A [ChangeNotifier] that fires whenever the auth state changes,
+/// so GoRouter re-evaluates its redirect logic.
+class _AuthRefreshNotifier extends ChangeNotifier {
+  _AuthRefreshNotifier(Ref ref) {
+    ref.listen(authProvider, (_, __) => notifyListeners());
+  }
+}
