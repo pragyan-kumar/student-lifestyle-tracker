@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,11 +45,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authState = ref.read(authProvider);
     if (authState.hasError) {
       setState(() {
-        final err = authState.error.toString();
-        if (err.contains('409') || err.contains('already')) {
-          _errorMsg = 'An account with this email already exists.';
-        } else if (err.contains('network') || err.contains('SocketException')) {
-          _errorMsg = 'No internet connection.';
+        final err = authState.error;
+        if (err is DioException) {
+          final statusCode = err.response?.statusCode;
+          if (err.type == DioExceptionType.connectionError ||
+              err.type == DioExceptionType.unknown) {
+            _errorMsg = 'Cannot reach the server. Make sure the backend is running on port 5000.';
+          } else if (err.type == DioExceptionType.connectionTimeout ||
+              err.type == DioExceptionType.receiveTimeout ||
+              err.type == DioExceptionType.sendTimeout) {
+            _errorMsg = 'Connection timed out. Please try again.';
+          } else if (statusCode == 409) {
+            _errorMsg = 'An account with this email already exists.';
+          } else if (statusCode == 400) {
+            final msg = err.response?.data?['message'] as String?;
+            _errorMsg = msg ?? 'Invalid input. Please check your details.';
+          } else {
+            final msg = err.response?.data?['message'] as String?;
+            _errorMsg = msg ?? 'Registration failed. Please try again.';
+          }
         } else {
           _errorMsg = 'Registration failed. Please try again.';
         }

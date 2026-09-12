@@ -19,35 +19,16 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Security & Middleware ────────────────────────────────────────────────────
-app.use(helmet({ crossOriginResourcePolicy: false }));
-
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-  : [];
-
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, Postman)
-      if (!origin) return callback(null, true);
-      // In development, allow all localhost origins dynamically
-      if (
-        process.env.NODE_ENV === "development" &&
-        /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
-      ) {
-        return callback(null, true);
-      }
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error(`CORS: origin ${origin} not allowed`));
-    },
+    origin: true, // Allow all origins dynamically (crucial for Flutter Web on dynamic localhost ports)
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     credentials: true,
     optionsSuccessStatus: 204,
   }),
 );
-// Ensure preflight OPTIONS requests are handled before other middleware
-app.options("*", cors());
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(express.json({ limit: "10kb" }));
 app.use(
   morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) } }),

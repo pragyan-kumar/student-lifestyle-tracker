@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,9 +16,9 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _formKey  = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
-  final _passCtrl  = TextEditingController();
+  final _passCtrl = TextEditingController();
   bool _obscure = true;
   String? _errorMsg;
 
@@ -41,11 +42,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.read(authProvider);
     if (authState.hasError) {
       setState(() {
-        final err = authState.error.toString();
-        if (err.contains('401') || err.contains('credentials') || err.contains('password')) {
-          _errorMsg = 'Invalid email or password.';
-        } else if (err.contains('network') || err.contains('SocketException')) {
-          _errorMsg = 'No internet connection.';
+        final err = authState.error;
+        if (err is DioException) {
+          final statusCode = err.response?.statusCode;
+          if (err.type == DioExceptionType.connectionError ||
+              err.type == DioExceptionType.unknown) {
+            _errorMsg =
+                'Cannot reach the server. Make sure the backend is running on port 5000.';
+          } else if (err.type == DioExceptionType.connectionTimeout ||
+              err.type == DioExceptionType.receiveTimeout ||
+              err.type == DioExceptionType.sendTimeout) {
+            _errorMsg = 'Connection timed out. Please try again.';
+          } else if (statusCode == 401) {
+            _errorMsg = 'Invalid email or password.';
+          } else if (statusCode == 404) {
+            _errorMsg = 'Account not found. Please sign up first.';
+          } else {
+            final msg = err.response?.data?['message'] as String?;
+            _errorMsg = msg ?? 'Login failed. Please try again.';
+          }
         } else {
           _errorMsg = 'Login failed. Please try again.';
         }
@@ -56,7 +71,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme   = Theme.of(context);
+    final theme = Theme.of(context);
     final loading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
@@ -71,14 +86,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
-                  const Icon(Icons.eco_rounded, size: 48, color: AppTheme.primaryGreen)
-                    .animate().scale(duration: 500.ms, curve: Curves.elasticOut),
+                  const Icon(Icons.eco_rounded,
+                          size: 48, color: AppTheme.primaryGreen)
+                      .animate()
+                      .scale(duration: 500.ms, curve: Curves.elasticOut),
                   const SizedBox(height: 16),
-                  Text('Welcome back 👋', style: theme.textTheme.headlineLarge?.copyWith(color: AppTheme.darkText))
-                    .animate().fadeIn(delay: 100.ms),
+                  Text('Welcome back 👋',
+                          style: theme.textTheme.headlineLarge
+                              ?.copyWith(color: AppTheme.darkText))
+                      .animate()
+                      .fadeIn(delay: 100.ms),
                   const SizedBox(height: 8),
-                  Text('Sign in to continue your eco journey', style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.darkTextMuted))
-                    .animate().fadeIn(delay: 200.ms),
+                  Text('Sign in to continue your eco journey',
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(color: AppTheme.darkTextMuted))
+                      .animate()
+                      .fadeIn(delay: 200.ms),
 
                   const SizedBox(height: 40),
 
@@ -89,13 +112,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       decoration: BoxDecoration(
                         color: AppTheme.errorRed.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.errorRed.withOpacity(0.5)),
+                        border: Border.all(
+                            color: AppTheme.errorRed.withOpacity(0.5)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline_rounded, color: AppTheme.errorRed, size: 18),
+                          const Icon(Icons.error_outline_rounded,
+                              color: AppTheme.errorRed, size: 18),
                           const SizedBox(width: 8),
-                          Expanded(child: Text(_errorMsg!, style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.errorRed))),
+                          Expanded(
+                              child: Text(_errorMsg!,
+                                  style: theme.textTheme.bodySmall
+                                      ?.copyWith(color: AppTheme.errorRed))),
                         ],
                       ),
                     ),
@@ -109,10 +137,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: const TextStyle(color: AppTheme.darkText),
                     decoration: const InputDecoration(
                       labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined, color: AppTheme.darkTextMuted),
+                      prefixIcon: Icon(Icons.email_outlined,
+                          color: AppTheme.darkTextMuted),
                     ),
-                    validator: (v) => (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
-                  ).animate().slideX(begin: -0.2, delay: 300.ms, duration: 400.ms),
+                    validator: (v) => (v == null || !v.contains('@'))
+                        ? 'Enter a valid email'
+                        : null,
+                  )
+                      .animate()
+                      .slideX(begin: -0.2, delay: 300.ms, duration: 400.ms),
 
                   const SizedBox(height: 16),
 
@@ -123,14 +156,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: const TextStyle(color: AppTheme.darkText),
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.darkTextMuted),
+                      prefixIcon: const Icon(Icons.lock_outline,
+                          color: AppTheme.darkTextMuted),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: AppTheme.darkTextMuted),
+                        icon: Icon(
+                            _obscure ? Icons.visibility_off : Icons.visibility,
+                            color: AppTheme.darkTextMuted),
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                     ),
-                    validator: (v) => (v == null || v.length < 6) ? 'Minimum 6 characters' : null,
-                  ).animate().slideX(begin: -0.2, delay: 400.ms, duration: 400.ms),
+                    validator: (v) => (v == null || v.length < 6)
+                        ? 'Minimum 6 characters'
+                        : null,
+                  )
+                      .animate()
+                      .slideX(begin: -0.2, delay: 400.ms, duration: 400.ms),
 
                   const SizedBox(height: 32),
 
@@ -140,7 +180,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: ElevatedButton(
                       onPressed: loading ? null : _login,
                       child: loading
-                          ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.black))
                           : const Text('Sign In'),
                     ),
                   ).animate().fadeIn(delay: 500.ms),
@@ -152,7 +196,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('or', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
+                      child: Text('or',
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: AppTheme.darkTextMuted)),
                     ),
                     const Expanded(child: Divider()),
                   ]),
@@ -162,13 +208,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Register link
                   Center(
                     child: GestureDetector(
-                      onTap: loading ? null : () => context.go(AppRoutes.register),
+                      onTap:
+                          loading ? null : () => context.go(AppRoutes.register),
                       child: RichText(
                         text: TextSpan(
                           text: "Don't have an account? ",
-                          style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.darkTextMuted),
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(color: AppTheme.darkTextMuted),
                           children: [
-                            TextSpan(text: 'Sign Up', style: theme.textTheme.bodyMedium?.copyWith(color: AppTheme.primaryGreen, fontWeight: FontWeight.w600)),
+                            TextSpan(
+                                text: 'Sign Up',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppTheme.primaryGreen,
+                                    fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),
