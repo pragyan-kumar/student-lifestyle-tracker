@@ -74,11 +74,11 @@ See individual README files in each sub-directory:
 ## 🗺️ Roadmap
 
 - [x] Project structure & architecture design
-- [ ] Auth flow (Firebase Auth + JWT)
-- [ ] Lifestyle habit logging screens
-- [ ] Carbon emission calculator
-- [ ] REST API endpoints
-- [ ] MongoDB schema + Firebase integration
+- [x] Auth flow (Firebase Auth + JWT)
+- [x] Lifestyle habit logging screens
+- [x] Carbon emission calculator
+- [x] REST API endpoints
+- [x] MongoDB schema + Firebase integration
 - [ ] ML model training pipeline
 - [ ] Gamification engine
 - [ ] Dashboard & analytics
