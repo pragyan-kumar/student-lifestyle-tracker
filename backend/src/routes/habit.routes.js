@@ -12,11 +12,22 @@ router.get("/", habitCtrl.getLogs);
 // GET  /api/v1/habits/today     — today's logged checklist and completion
 router.get("/today", habitCtrl.getToday);
 
+<<<<<<< HEAD
 // POST /api/v1/habits/checklist/toggle — toggle single habit in checklist
 router.post("/checklist/toggle", habitCtrl.toggleChecklist);
 
+=======
+<<<<<<< Updated upstream
+>>>>>>> 2083f4c (Major changes)
 // POST /api/v1/habits           — create today's habit log
+=======
+// POST /api/v1/habits/checklist/toggle — toggle single habit in checklist
+router.post("/checklist/toggle", habitCtrl.toggleChecklist);
+
+// POST /api/v1/habits and POST /api/v1/habits/log — create today's habit log
+>>>>>>> Stashed changes
 router.post("/", habitCtrl.createLog);
+router.post("/log", habitCtrl.createLog);
 
 // GET  /api/v1/habits/streak    — current streak info
 router.get("/streak", habitCtrl.getStreak);
