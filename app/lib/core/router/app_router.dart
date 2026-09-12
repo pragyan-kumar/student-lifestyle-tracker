@@ -45,12 +45,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.onboarding,
     debugLogDiagnostics: true,
     refreshListenable: routerRefreshNotifier,
-    // TODO: Re-enable auth redirect when backend auth is ready.
     redirect: (context, state) {
-      // Only splash is fully bypassed — login/register/onboarding are allowed through.
-      if (state.matchedLocation == AppRoutes.splash) return AppRoutes.dashboard;
+      final authState = ref.read(authProvider);
+      final isLoggedIn = authState.value != null;
+      final loc = state.matchedLocation;
 
-      // Onboarding is allowed through — navigates to dashboard on Skip/Get Started.
+      final isAuthRoute = loc == AppRoutes.login ||
+          loc == AppRoutes.register ||
+          loc == AppRoutes.onboarding ||
+          loc == AppRoutes.splash;
+
+      // If user is not logged in and tries to access a protected screen
+      if (!isLoggedIn && !isAuthRoute) {
+        return AppRoutes.login;
+      }
+
+      // If user is logged in and is on auth/splash/onboarding screens
+      if (isLoggedIn && isAuthRoute) {
+        return AppRoutes.dashboard;
+      }
+
       return null;
     },
     routes: [

@@ -19,8 +19,16 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Security & Middleware ────────────────────────────────────────────────────
-app.use(helmet());
-app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(",") || "*" }));
+app.use(
+  cors({
+    origin: true, // Allow all origins dynamically (crucial for Flutter Web on dynamic localhost ports)
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    credentials: true,
+    optionsSuccessStatus: 204,
+  }),
+);
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(express.json({ limit: "10kb" }));
 app.use(
   morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) } }),
