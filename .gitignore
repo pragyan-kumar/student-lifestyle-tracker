@@ -25,12 +25,14 @@ backend/.env
 backend/logs/
 
 # ── Python ML Service ────────────────────────────────────────────────────────
-ml_service/__pycache__/
+__pycache__/
+*.pyc
+ml_service/venv/
 ml_service/.venv/
-ml_service/*.pyc
 ml_service/models/*.pkl
 ml_service/data/raw/
 ml_service/.env
+
 
 # ── General ──────────────────────────────────────────────────────────────────
 .DS_Store
