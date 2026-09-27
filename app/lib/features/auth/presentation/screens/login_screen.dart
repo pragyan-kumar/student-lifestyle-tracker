@@ -48,7 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           if (err.type == DioExceptionType.connectionError ||
               err.type == DioExceptionType.unknown) {
             _errorMsg =
-                'Cannot reach the server. Make sure the backend is running on port 5000.';
+                'Cannot reach the server. Make sure the backend is running on port 5001.';
           } else if (err.type == DioExceptionType.connectionTimeout ||
               err.type == DioExceptionType.receiveTimeout ||
               err.type == DioExceptionType.sendTimeout) {
