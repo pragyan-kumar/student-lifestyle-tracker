@@ -10,51 +10,65 @@ try {
 }
 
 let isConnected = false;
+let memoryServer = null; // holds MongoMemoryServer instance if used
 
 const isPlaceholderUri = (uri) => {
   if (!uri) return true;
   return uri.includes('<username>') || uri.includes('<password>');
 };
 
+/** Spin up an in-memory MongoDB and return its URI */
+const startMemoryServer = async () => {
+  const { MongoMemoryServer } = require('mongodb-memory-server');
+  memoryServer = await MongoMemoryServer.create();
+  const uri = memoryServer.getUri();
+  logger.info(`🧪 In-memory MongoDB started at ${uri}`);
+  return uri;
+};
+
 const connectDB = async () => {
   const uri = process.env.MONGODB_URI;
 
-  if (isPlaceholderUri(uri)) {
-    logger.warn('⚠️ MONGODB_URI in backend/.env has placeholder credentials (<username>:<password>).');
-
-    // Try local MongoDB on 127.0.0.1:27017 first
+  // ── Try Atlas first (if URI looks real) ────────────────────────────────────
+  if (!isPlaceholderUri(uri)) {
     try {
-      const localUri = 'mongodb://127.0.0.1:27017/lifestyle_tracker';
-      logger.info(`Attempting connection to local MongoDB at ${localUri}...`);
-      await mongoose.connect(localUri, { serverSelectionTimeoutMS: 1500 });
+      await mongoose.connect(uri, { serverSelectionTimeoutMS: 6000 });
       isConnected = true;
-      logger.info('✅ Connected to local MongoDB');
+      logger.info('✅ MongoDB Atlas connected successfully');
       return;
-    } catch {
-      logger.warn('Local MongoDB on 127.0.0.1:27017 is not running.');
+    } catch (err) {
+      logger.error(`MongoDB Atlas connection error: ${err.message}`);
+      if (process.env.NODE_ENV === 'production') {
+        logger.error('Fatal: Production server requires a valid MONGODB_URI.');
+        process.exit(1);
+      }
+      logger.warn('⚠️ Atlas unavailable — falling back to in-memory MongoDB for development.');
     }
-
-    if (process.env.NODE_ENV === 'production') {
-      logger.error('Fatal: Production server requires a valid MONGODB_URI.');
-      process.exit(1);
-    } else {
-      logger.warn('⚠️ Server started in development mode without active MongoDB.');
-      logger.warn('👉 Update MONGODB_URI in backend/.env with your MongoDB Atlas connection string.');
-      return;
-    }
+  } else {
+    logger.warn('⚠️ MONGODB_URI has placeholder credentials — skipping Atlas.');
   }
 
+  // ── Try local MongoDB ───────────────────────────────────────────────────────
   try {
-    await mongoose.connect(uri, { serverSelectionTimeoutMS: 6000 });
+    const localUri = 'mongodb://127.0.0.1:27017/lifestyle_tracker';
+    logger.info('Trying local MongoDB at 127.0.0.1:27017...');
+    await mongoose.connect(localUri, { serverSelectionTimeoutMS: 1500 });
     isConnected = true;
-    logger.info('✅ MongoDB Atlas connected successfully');
+    logger.info('✅ Connected to local MongoDB');
+    return;
+  } catch {
+    logger.warn('Local MongoDB not available.');
+  }
+
+  // ── Fall back to in-memory MongoDB (always works) ──────────────────────────
+  try {
+    const memUri = await startMemoryServer();
+    await mongoose.connect(memUri);
+    isConnected = true;
+    logger.info('✅ Connected to in-memory MongoDB (data resets on server restart)');
   } catch (err) {
-    logger.error(`MongoDB connection error: ${err.message}`);
-    if (process.env.NODE_ENV === 'production') {
-      process.exit(1);
-    } else {
-      logger.warn('⚠️ Continuing in development mode with disconnected database.');
-    }
+    logger.error(`Failed to start in-memory MongoDB: ${err.message}`);
+    if (process.env.NODE_ENV === 'production') process.exit(1);
   }
 };
 
