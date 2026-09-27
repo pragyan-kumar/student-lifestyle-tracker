@@ -9,17 +9,7 @@ class AppConstants {
   static String get baseUrl {
     const envUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
     if (envUrl.isNotEmpty) return envUrl;
-<<<<<<< HEAD
     return kIsWeb ? 'http://localhost:5001/api/v1' : 'http://10.0.2.2:5001/api/v1';
-=======
-<<<<<<< Updated upstream
-    return kIsWeb ? 'http://localhost:5000/api/v1' : 'http://10.0.2.2:5000/api/v1';
-=======
-    return kIsWeb
-        ? 'http://localhost:5000/api/v1'
-        : 'http://10.0.2.2:5000/api/v1';
->>>>>>> Stashed changes
->>>>>>> 2083f4c (Major changes)
   }
 
   static const String carbonInterfaceUrl =
