@@ -6,6 +6,7 @@ const {
   detectFlags,
   calculateNewStreak,
 } = require("../services/habit/habit.service");
+const { recordPoints } = require("../services/gamification/gamification.service");
 
 // GET /api/v1/habits
 exports.getLogs = async (req, res) => {
@@ -205,6 +206,19 @@ exports.toggleChecklist = async (req, res) => {
       }
       user.points = Math.max(0, (user.points || 0) + pointDelta);
       await user.save();
+
+      // Record point history
+      if (pointDelta !== 0) {
+        recordPoints(req.user._id, {
+          amount: pointDelta,
+          type: 'habit',
+          label: pointDelta > 0
+            ? `✅ Habit completed: ${canonicalKey}`
+            : `↩️ Habit unchecked: ${canonicalKey}`,
+          refModel: 'HabitLog',
+          refId: log._id,
+        }).catch((err) => logger.warn('Point history record failed:', err.message));
+      }
     }
 
     const currentChecklist = {
@@ -301,6 +315,17 @@ exports.createLog = async (req, res) => {
       user.lastActivityDate = new Date();
       user.points = (user.points || 0) + pointsEarned;
       await user.save();
+
+      // Record point history for the new log
+      if (pointsEarned > 0) {
+        recordPoints(req.user._id, {
+          amount: pointsEarned,
+          type: 'habit',
+          label: '📝 Daily habit log recorded',
+          refModel: 'HabitLog',
+          refId: log._id,
+        }).catch((err) => logger.warn('Point history record failed:', err.message));
+      }
     }
 
     // Sync to Firebase RTDB
