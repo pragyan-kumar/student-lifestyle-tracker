@@ -4,7 +4,7 @@ const User       = require('../models/user.model');
 const axios      = require('axios');
 const { logger } = require('../utils/logger');
 
-const ML_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+const AI_URL = process.env.AI_URL || process.env.ML_SERVICE_URL || 'http://localhost:8000';
 
 /**
  * Aggregate the last 7 days of habit + carbon logs for a user
@@ -71,7 +71,7 @@ exports.getInsights = async (req, res) => {
 
     try {
       // Call ML FastAPI service
-      const { data } = await axios.post(`${ML_URL}/predict`, features, {
+      const { data } = await axios.post(`${AI_URL}/predict`, features, {
         timeout: 5000,
       });
       insights = data;
@@ -103,7 +103,7 @@ exports.triggerAnalysis = async (req, res) => {
     let source = 'ml';
 
     try {
-      const { data } = await axios.post(`${ML_URL}/predict`, features, { timeout: 5000 });
+      const { data } = await axios.post(`${AI_URL}/predict`, features, { timeout: 5000 });
       insights = data;
     } catch {
       source = 'rules';
