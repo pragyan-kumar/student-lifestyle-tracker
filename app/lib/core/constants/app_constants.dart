@@ -6,11 +6,8 @@ class AppConstants {
 
   // ── API ─────────────────────────────────────────────────────────────────
   /// On web/desktop use localhost; on Android emulator use 10.0.2.2.
-  static String get baseUrl {
-    const envUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-    if (envUrl.isNotEmpty) return envUrl;
-    return kIsWeb ? 'http://localhost:5001/api/v1' : 'http://10.0.2.2:5001/api/v1';
-  }
+  static const String baseUrl =
+      "https://lifestyle-management-backend.onrender.com/api/v1";
 
   static const String carbonInterfaceUrl =
       'https://www.carboninterface.com/api/v1';
