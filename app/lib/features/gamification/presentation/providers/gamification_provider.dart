@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/gamification_repository.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 // ── Wallet (points + history) ────────────────────────────────────────────────
 
@@ -10,6 +11,7 @@ final walletProvider =
 class WalletNotifier extends AsyncNotifier<WalletData> {
   @override
   Future<WalletData> build() async {
+    ref.watch(authProvider); // Re-run when user logs in/out
     final repo = ref.watch(gamificationRepositoryProvider);
     return repo.getWallet();
   }
@@ -28,6 +30,7 @@ final badgesProvider =
 class BadgesNotifier extends AsyncNotifier<BadgesResult> {
   @override
   Future<BadgesResult> build() async {
+    ref.watch(authProvider); // Re-run when user logs in/out
     final repo = ref.watch(gamificationRepositoryProvider);
     return repo.getBadges();
   }
@@ -46,6 +49,7 @@ final rewardsProvider =
 class RewardsNotifier extends AsyncNotifier<RewardsResult> {
   @override
   Future<RewardsResult> build() async {
+    ref.watch(authProvider); // Re-run when user logs in/out
     final repo = ref.watch(gamificationRepositoryProvider);
     return repo.getRewards();
   }

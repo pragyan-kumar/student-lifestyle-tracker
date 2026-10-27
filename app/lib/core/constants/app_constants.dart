@@ -1,13 +1,23 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 
 /// App-wide constants.
 class AppConstants {
   AppConstants._();
 
+  // ── Production Backend URL (Render) ─────────────────────────────────────
+  static const String productionBaseUrl =
+      'https://lifestyle-management-backend.onrender.com/api/v1';
+
   // ── API ─────────────────────────────────────────────────────────────────
-  /// On web/desktop use localhost; on Android emulator use 10.0.2.2.
-  static const String baseUrl =
-      "https://lifestyle-management-backend.onrender.com/api/v1";
+  /// Uses compile-time `--dart-define=API_BASE_URL=...` if provided.
+  /// In release mode (APK) or mobile builds, defaults to production Render backend.
+  /// In web debug mode, defaults to localhost:5001.
+  static String get baseUrl {
+    const envUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    if (envUrl.isNotEmpty) return envUrl;
+    if (kReleaseMode) return productionBaseUrl;
+    return kIsWeb ? 'http://localhost:5001/api/v1' : productionBaseUrl;
+  }
 
   static const String carbonInterfaceUrl =
       'https://www.carboninterface.com/api/v1';

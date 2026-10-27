@@ -4,9 +4,12 @@ import '../../data/habits_repository.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
+import '../../../gamification/presentation/providers/gamification_provider.dart';
+
 class HabitsNotifier extends AsyncNotifier<HabitChecklistData> {
   @override
   Future<HabitChecklistData> build() async {
+    ref.watch(authProvider); // Re-run when user logs in/out
     final repo = ref.watch(habitsRepositoryProvider);
     return repo.getTodayHabits();
   }
@@ -34,10 +37,11 @@ class HabitsNotifier extends AsyncNotifier<HabitChecklistData> {
       final updated = await repo.toggleHabit(habit, done);
       state = AsyncData(updated);
 
-      // 3. Trigger Home / Dashboard refresh
+      // 3. Trigger Home / Dashboard and Rewards refresh
       ref.invalidate(dashboardSummaryProvider);
       if (updated.userPoints != null) {
         ref.invalidate(authProvider);
+        ref.invalidate(walletProvider);
       }
     } catch (e) {
       // API failed (e.g. no auth) — keep the optimistic state so the UI stays responsive.
@@ -62,6 +66,7 @@ class HabitsNotifier extends AsyncNotifier<HabitChecklistData> {
       ref.invalidate(dashboardSummaryProvider);
       if (updated.userPoints != null) {
         ref.invalidate(authProvider);
+        ref.invalidate(walletProvider);
       }
     } catch (e) {
       // Offline / no-auth — still optimistically mark done

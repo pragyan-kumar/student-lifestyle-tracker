@@ -36,7 +36,7 @@ class AppRoutes {
 // ── Riverpod provider for the router ────────────────────────────────────────
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Listen to auth state so the router refreshes on login/logout.
-  final authNotifier = ref.watch(authProvider.notifier);
+  ref.watch(authProvider);
 
   // A Listenable that GoRouter can subscribe to for redirects.
   final routerRefreshNotifier = _AuthRefreshNotifier(ref);

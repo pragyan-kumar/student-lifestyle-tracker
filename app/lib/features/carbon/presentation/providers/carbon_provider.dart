@@ -72,7 +72,7 @@ class CarbonCalculatorNotifier extends Notifier<CarbonCalculatorState> {
       });
       print(
           '[CARBON SYNC SUCCESS] synced total: ${res.data['totalEmissionKg']} kg');
-      ref.refresh(dashboardSummaryProvider);
+      ref.invalidate(dashboardSummaryProvider);
     } catch (e) {
       print('[CARBON SYNC ERROR] $e');
     }

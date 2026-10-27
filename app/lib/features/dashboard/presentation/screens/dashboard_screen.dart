@@ -11,7 +11,12 @@ import '../../../habits/presentation/providers/habits_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../../../carbon/presentation/providers/carbon_provider.dart';
 
-/// Home Dashboard — shows daily summary of habits, carbon footprint, and points.
+/// Home Dashboard — shows daily summary of carbon footprint, habits, checklist, weekly trend, eco tip, and rewards.
+/// Redesigned with Apple Health / Linear / Material 3 inspired dark aesthetic:
+/// - 80% reduced neon glow with soft diffused shadows and subtle 1px borders
+/// - Strict 20–24px radius flatter cards
+/// - Strict visual hierarchy: Today's CO₂ -> Habits -> Checklist -> Weekly Trend -> Eco Tip -> Rewards
+/// - Smooth LineChart for Weekly Trend with subtle gradient fill and highlighted current day
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -54,7 +59,7 @@ class DashboardScreen extends ConsumerWidget {
       backgroundColor: AppTheme.darkBackground,
       body: SafeArea(
         child: RefreshIndicator(
-          color: AppTheme.primaryGreen,
+          color: AppTheme.primaryTeal,
           backgroundColor: AppTheme.darkCard,
           onRefresh: () async {
             ref.invalidate(dashboardSummaryProvider);
@@ -65,237 +70,267 @@ class DashboardScreen extends ConsumerWidget {
             ]);
           },
           child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              // ── Gradient App Bar ─────────────────────────────────────────
+              // ── Header App Bar ─────────────────────────────────────────
               SliverAppBar(
                 floating: true,
-                expandedHeight: 90,
-                backgroundColor: Colors.transparent,
-                flexibleSpace: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF0D1117), Color(0xFF0D1B2A)],
+                backgroundColor: AppTheme.darkBackground,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                titleSpacing: 18,
+                title: Row(
+                  children: [
+                    // Sleek Brand Pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.darkSurface,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: AppTheme.primaryTeal.withOpacity(0.25),
+                            width: 1),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.eco_rounded,
+                              color: AppTheme.primaryTeal, size: 15),
+                          const SizedBox(width: 6),
+                          Text(
+                            'EcoLife',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppTheme.primaryTeal,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  child: FlexibleSpaceBar(
-                    titlePadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    title: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Glowing logo pill
-                        Container(
+                    const Spacer(),
+                    // User avatar / profile button — or Login pill when guest
+                    if (authUser != null)
+                      GestureDetector(
+                        onTap: () => context.go(AppRoutes.profile),
+                        child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(colors: [
-                              AppTheme.primaryGreen.withOpacity(0.25),
-                              AppTheme.secondaryTeal.withOpacity(0.15),
-                            ]),
+                            color: AppTheme.darkSurface,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                                color: AppTheme.primaryGreen.withOpacity(0.5)),
-                            boxShadow: [
-                              BoxShadow(
-                                  color: AppTheme.primaryGreen.withOpacity(0.3),
-                                  blurRadius: 12)
-                            ],
+                                color: AppTheme.darkBorder, width: 1),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.eco_rounded,
-                                  color: AppTheme.primaryGreen, size: 14),
-                              const SizedBox(width: 4),
-                              Text('EcoLife',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppTheme.primaryGreen,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 11,
-                                  )),
+                              CircleAvatar(
+                                radius: 11,
+                                backgroundColor:
+                                    AppTheme.primaryTeal.withOpacity(0.18),
+                                child: Text(
+                                  authUser.name.isNotEmpty
+                                      ? authUser.name[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.primaryTeal),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                authUser.name.split(' ').first,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.darkText),
+                              ),
                             ],
                           ),
                         ),
-                        const Spacer(),
-                        // User avatar / profile button — or Login pill when guest
-                        if (authUser != null)
-                          GestureDetector(
-                            onTap: () => context.go(AppRoutes.profile),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: [
-                                  AppTheme.primaryGreen.withOpacity(0.25),
-                                  AppTheme.secondaryTeal.withOpacity(0.15),
-                                ]),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                    color:
-                                        AppTheme.primaryGreen.withOpacity(0.6)),
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: AppTheme.primaryGreen
-                                          .withOpacity(0.2),
-                                      blurRadius: 8)
-                                ],
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 10,
-                                    backgroundColor:
-                                        AppTheme.primaryGreen.withOpacity(0.3),
-                                    child: Text(
-                                      authUser.name.isNotEmpty
-                                          ? authUser.name[0].toUpperCase()
-                                          : '?',
-                                      style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppTheme.primaryGreen),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    authUser.name.split(' ').first,
-                                    style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppTheme.primaryGreen),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        else
-                          GestureDetector(
-                            onTap: () => context.go(AppRoutes.login),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: [
-                                  AppTheme.primaryGreen.withOpacity(0.2),
-                                  AppTheme.secondaryTeal.withOpacity(0.1),
-                                ]),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                    color:
-                                        AppTheme.primaryGreen.withOpacity(0.6)),
-                                boxShadow: [
-                                  BoxShadow(
-                                      color: AppTheme.primaryGreen
-                                          .withOpacity(0.25),
-                                      blurRadius: 10)
-                                ],
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.login_rounded,
-                                      color: AppTheme.primaryGreen, size: 13),
-                                  SizedBox(width: 5),
-                                  Text('Login',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppTheme.primaryGreen)),
-                                ],
-                              ),
-                            ),
+                      )
+                    else
+                      GestureDetector(
+                        onTap: () => context.go(AppRoutes.login),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryTeal.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: AppTheme.primaryTeal.withOpacity(0.35),
+                                width: 1),
                           ),
-                      ],
-                    ),
-                  ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.login_rounded,
+                                  color: AppTheme.primaryTeal, size: 14),
+                              SizedBox(width: 6),
+                              Text('Login',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.primaryTeal)),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
 
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: const EdgeInsets.fromLTRB(18, 6, 18, 32),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // ── Welcome Hero Banner ──────────────────────────────────
+                    // ── Welcome Banner ───────────────────────────────────
                     _WelcomeBanner(
-                      name: authUser?.name.split(' ').first ??
-                          'Wellness Advocate',
+                      name: authUser?.name.split(' ').first ?? 'Wellness Advocate',
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
 
-                    // ── Login / Sign Up prompt (guest only) ─────────────────
-                    if (authUser == null) _LoginPromptCard(),
-                    if (authUser == null) const SizedBox(height: 12),
+                    // ── Login Prompt (guest only) ─────────────────────────
+                    if (authUser == null) ...[
+                      _LoginPromptCard(),
+                      const SizedBox(height: 20),
+                    ],
 
-                    // ── Today's Carbon Card ──────────────────────────────
+                    // ═══════════════════════════════════════════════════════
+                    // 1. PRIMARY FOCUS: Today's CO₂
+                    // ═══════════════════════════════════════════════════════
                     _CarbonSummaryCard(
                       emissionKg: emissionKg,
                       hasLogged: hasLoggedCarbon,
                     ),
-                    const SizedBox(height: 16),
-
-                    // ── Points Wallet Row ────────────────────────────────
-                    _PointsWalletCard(
-                      points: points,
-                      streak: streakDays,
-                      badges: badgesCount,
-                    ),
                     const SizedBox(height: 24),
 
-                    // ── Today's Habits Section ───────────────────────────
+                    // ═══════════════════════════════════════════════════════
+                    // 2. HABITS: Today's Habits
+                    // ═══════════════════════════════════════════════════════
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _SectionTitle(
                           title: "Today's Habits",
                           icon: Icons.self_improvement_rounded,
-                          color: AppTheme.warningOrange,
+                          color: AppTheme.primaryTeal,
                         ),
                         GestureDetector(
                           onTap: () => context.go(AppRoutes.habits),
-                          child: Row(
-                            children: [
-                              Text('Tracker',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppTheme.primaryGreen,
-                                    fontWeight: FontWeight.w600,
-                                  )),
-                              const Icon(Icons.chevron_right_rounded,
-                                  color: AppTheme.primaryGreen, size: 16),
-                            ],
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkSurface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: AppTheme.darkBorder, width: 1),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('Tracker',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: AppTheme.primaryTeal,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                    )),
+                                const SizedBox(width: 2),
+                                const Icon(Icons.chevron_right_rounded,
+                                    color: AppTheme.primaryTeal, size: 14),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     _HabitProgressRow(
                       checklist: checklist,
                       progress: habitProgress,
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 24),
 
-                    // ── Today's Checklist Quick Card ─────────────────────
+                    // ═══════════════════════════════════════════════════════
+                    // 3. CHECKLIST: Today's Checklist Quick Card
+                    // ═══════════════════════════════════════════════════════
                     _DashboardChecklistCard(
                       checklist: checklist,
                       completedCount: completedCount,
                     ),
                     const SizedBox(height: 24),
 
-                    // ── Weekly Carbon Chart ──────────────────────────────
+                    // ═══════════════════════════════════════════════════════
+                    // 4. WEEKLY TREND: Smooth Line Chart
+                    // ═══════════════════════════════════════════════════════
                     _SectionTitle(
                       title: 'Weekly Carbon Trend',
-                      icon: Icons.bar_chart_rounded,
-                      color: AppTheme.secondaryTeal,
+                      icon: Icons.show_chart_rounded,
+                      color: AppTheme.secondaryBlue,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     _WeeklyChart(data: summary.weeklyCarbonDaily),
                     const SizedBox(height: 24),
 
-                    // ── Tip Card ─────────────────────────────────────────
+                    // ═══════════════════════════════════════════════════════
+                    // 5. ECO TIP: Daily Eco Tip
+                    // ═══════════════════════════════════════════════════════
                     _InsightTipCard(),
-                    const SizedBox(height: 80), // nav bar clearance
+                    const SizedBox(height: 24),
+
+                    // ═══════════════════════════════════════════════════════
+                    // 6. REWARDS: Points, Streak & Badges
+                    // ═══════════════════════════════════════════════════════
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _SectionTitle(
+                          title: 'Rewards & Streaks',
+                          icon: Icons.emoji_events_rounded,
+                          color: AppTheme.accentAmber,
+                        ),
+                        GestureDetector(
+                          onTap: () => context.go(AppRoutes.rewards),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppTheme.darkSurface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: AppTheme.darkBorder, width: 1),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('Wallet',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: AppTheme.accentAmber,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                    )),
+                                const SizedBox(width: 2),
+                                const Icon(Icons.chevron_right_rounded,
+                                    color: AppTheme.accentAmber, size: 14),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    _PointsWalletCard(
+                      points: points,
+                      streak: streakDays,
+                      badges: badgesCount,
+                    ),
+                    const SizedBox(height: 80), // Nav bar clearance
                   ]),
                 ),
               ),
@@ -322,20 +357,22 @@ class _SectionTitle extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(color: color.withOpacity(0.3), blurRadius: 8)
-            ],
+            color: color.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withOpacity(0.25), width: 1),
           ),
           child: Icon(icon, color: color, size: 16),
         ),
         const SizedBox(width: 10),
-        Text(title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppTheme.darkText,
-                  fontWeight: FontWeight.w700,
-                )),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppTheme.darkText,
+                fontWeight: FontWeight.w700,
+                fontSize: 17,
+                letterSpacing: -0.2,
+              ),
+        ),
       ],
     );
   }
@@ -350,25 +387,17 @@ class _WelcomeBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.primaryGreen.withOpacity(0.18),
-            AppTheme.secondaryTeal.withOpacity(0.12),
-            AppTheme.warningOrange.withOpacity(0.08),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-            color: AppTheme.primaryGreen.withOpacity(0.4), width: 1.5),
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppTheme.darkBorder, width: 1),
         boxShadow: [
           BoxShadow(
-              color: AppTheme.primaryGreen.withOpacity(0.15),
-              blurRadius: 24,
-              spreadRadius: 2),
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Column(
@@ -376,41 +405,57 @@ class _WelcomeBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text('👋', style: TextStyle(fontSize: 28)),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Hello, $name!',
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  color: AppTheme.darkText,
-                                  fontWeight: FontWeight.w800,
-                                )),
-                    const SizedBox(height: 2),
-                    Text('Track habits & cut your carbon footprint',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.primaryGreen,
-                            )),
+                    Text(
+                      'Hello, $name',
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                color: AppTheme.darkText,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 22,
+                                letterSpacing: -0.3,
+                              ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Track daily habits and reduce your carbon footprint.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.darkTextMuted,
+                            fontSize: 13,
+                          ),
+                    ),
                   ],
                 ),
               ),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryTeal.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: AppTheme.primaryTeal.withOpacity(0.25), width: 1),
+                ),
+                child: const Icon(Icons.spa_rounded,
+                    color: AppTheme.primaryTeal, size: 22),
+              ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
             children: const [
-              _PillBadge('🌿 Track habits', AppTheme.primaryGreen),
-              SizedBox(width: 8),
-              _PillBadge('⚡ Cut carbon', AppTheme.secondaryTeal),
-              SizedBox(width: 8),
-              _PillBadge('🏆 Earn points', AppTheme.accentAmber),
+              _PillBadge('Habits', AppTheme.primaryTeal),
+              _PillBadge('Carbon', AppTheme.secondaryBlue),
+              _PillBadge('Rewards', AppTheme.accentAmber),
             ],
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.05);
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.03);
   }
 }
 
@@ -422,16 +467,31 @@ class _PillBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.2), blurRadius: 8)],
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.25), width: 1),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -442,102 +502,81 @@ class _LoginPromptCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryGreen.withOpacity(0.08),
-            AppTheme.secondaryTeal.withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: AppTheme.primaryGreen.withOpacity(0.35), width: 1),
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.darkBorder, width: 1),
         boxShadow: [
           BoxShadow(
-              color: AppTheme.primaryGreen.withOpacity(0.08), blurRadius: 16),
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
-              color: AppTheme.primaryGreen.withOpacity(0.12),
-              shape: BoxShape.circle,
+              color: AppTheme.primaryTeal.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: AppTheme.primaryTeal.withOpacity(0.2), width: 1),
             ),
             child: const Icon(Icons.person_outline_rounded,
-                color: AppTheme.primaryGreen, size: 18),
+                color: AppTheme.primaryTeal, size: 20),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Save your progress',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.darkText,
-                          fontWeight: FontWeight.w700,
-                        )),
-                Text('Log in to sync habits & earn rewards',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.darkTextMuted,
-                        )),
+                Text(
+                  'Save your progress',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.darkText,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                ),
+                Text(
+                  'Sign in to sync habits & earn rewards',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.darkTextMuted,
+                        fontSize: 12,
+                      ),
+                ),
               ],
             ),
           ),
           const SizedBox(width: 10),
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => context.go(AppRoutes.login),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                          color: AppTheme.primaryGreen.withOpacity(0.4),
-                          blurRadius: 8)
-                    ],
-                  ),
-                  child: const Text('Login',
-                      style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12)),
+          GestureDetector(
+            onTap: () => context.go(AppRoutes.login),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryTeal,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Text(
+                'Login',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
                 ),
               ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => context.go(AppRoutes.register),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: AppTheme.primaryGreen.withOpacity(0.4)),
-                  ),
-                  child: const Text('Sign Up',
-                      style: TextStyle(
-                          color: AppTheme.primaryGreen,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12)),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideY(begin: 0.05);
+    ).animate().fadeIn(duration: 400.ms, delay: 150.ms);
   }
 }
 
-// ── Carbon Summary Hero Card ─────────────────────────────────────────────────
+// ── Carbon Summary Hero Card (PRIMARY FOCUS) ─────────────────────────────────
 class _CarbonSummaryCard extends StatelessWidget {
   const _CarbonSummaryCard({
     required this.emissionKg,
@@ -550,195 +589,194 @@ class _CarbonSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.primaryGreen.withOpacity(0.18),
-            AppTheme.secondaryTeal.withOpacity(0.10),
-            Colors.transparent,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-            color: AppTheme.primaryGreen.withOpacity(0.5), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-              color: AppTheme.primaryGreen.withOpacity(0.2),
-              blurRadius: 20,
-              spreadRadius: 1),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Today's CO₂",
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: AppTheme.darkTextMuted)),
-                const SizedBox(height: 4),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [AppTheme.primaryGreen, AppTheme.secondaryTeal],
-                      ).createShader(bounds),
-                      child: Text(
-                        emissionKg.toStringAsFixed(1),
-                        style:
-                            Theme.of(context).textTheme.displayLarge?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6, left: 6),
-                      child: Text('kg CO₂',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(color: AppTheme.darkTextMuted)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(
-                        hasLogged
-                            ? Icons.check_circle_rounded
-                            : Icons.add_circle_outline_rounded,
-                        size: 13,
-                        color: AppTheme.primaryGreen),
-                    const SizedBox(width: 4),
-                    Text(
-                      hasLogged
-                          ? 'Carbon footprint logged today'
-                          : 'Log your first activity',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: AppTheme.primaryGreen),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.primaryGreen.withOpacity(0.1),
-              boxShadow: [
-                BoxShadow(
-                    color: AppTheme.primaryGreen.withOpacity(0.4),
-                    blurRadius: 20)
-              ],
-            ),
-            child: const Icon(Icons.eco_rounded,
-                size: 44, color: AppTheme.primaryGreen),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1);
-  }
-}
-
-// ── Points Wallet Card ───────────────────────────────────────────────────────
-class _PointsWalletCard extends StatelessWidget {
-  const _PointsWalletCard({
-    required this.points,
-    required this.streak,
-    required this.badges,
-  });
-
-  final int points;
-  final int streak;
-  final int badges;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-            child: _StatChip(
-                label: 'Points',
-                value: '$points',
-                icon: Icons.stars_rounded,
-                color: AppTheme.accentAmber)),
-        const SizedBox(width: 12),
-        Expanded(
-            child: _StatChip(
-                label: 'Streak',
-                value: '$streak ${streak == 1 ? "day" : "days"}',
-                icon: Icons.local_fire_department_rounded,
-                color: AppTheme.warningOrange)),
-        const SizedBox(width: 12),
-        Expanded(
-            child: _StatChip(
-                label: 'Badges',
-                value: '$badges',
-                icon: Icons.military_tech_rounded,
-                color: AppTheme.secondaryTeal)),
-      ],
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  const _StatChip(
-      {required this.label,
-      required this.value,
-      required this.icon,
-      required this.color});
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [color.withOpacity(0.18), color.withOpacity(0.06)],
+          color: hasLogged
+              ? AppTheme.primaryTeal.withOpacity(0.3)
+              : AppTheme.darkBorder,
+          width: 1,
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.5), width: 1.5),
         boxShadow: [
           BoxShadow(
-              color: color.withOpacity(0.25), blurRadius: 14, spreadRadius: 1)
+            color: Colors.black.withOpacity(0.24),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 26),
-          const SizedBox(height: 6),
-          Text(value,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppTheme.darkText,
-                    fontWeight: FontWeight.w800,
-                  )),
-          Text(label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: color.withOpacity(0.8))),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: hasLogged
+                          ? AppTheme.primaryTeal
+                          : AppTheme.accentAmber,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    "TODAY'S CO₂ FOOTPRINT",
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.darkTextMuted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                        ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: hasLogged
+                      ? AppTheme.primaryTeal.withOpacity(0.12)
+                      : AppTheme.darkSurface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: hasLogged
+                        ? AppTheme.primaryTeal.withOpacity(0.3)
+                        : AppTheme.darkBorder,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      hasLogged
+                          ? Icons.check_circle_rounded
+                          : Icons.schedule_rounded,
+                      size: 13,
+                      color: hasLogged
+                          ? AppTheme.primaryTeal
+                          : AppTheme.darkTextMuted,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      hasLogged ? 'Logged' : 'Pending',
+                      style: TextStyle(
+                        color: hasLogged
+                            ? AppTheme.primaryTeal
+                            : AppTheme.darkTextMuted,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                emissionKg.toStringAsFixed(1),
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                      color: AppTheme.primaryTeal,
+                      fontSize: 44,
+                      fontWeight: FontWeight.w800,
+                      height: 1.0,
+                      letterSpacing: -1.0,
+                    ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'kg CO₂e',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppTheme.darkTextMuted,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => context.go(AppRoutes.carbon),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryTeal.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                        color: AppTheme.primaryTeal.withOpacity(0.3), width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        hasLogged ? Icons.calculate_rounded : Icons.add_rounded,
+                        color: AppTheme.primaryTeal,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        hasLogged ? 'Calculator' : 'Log Entry',
+                        style: const TextStyle(
+                          color: AppTheme.primaryTeal,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppTheme.darkBorder, width: 1),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  emissionKg <= 2.5
+                      ? Icons.energy_savings_leaf_rounded
+                      : Icons.info_outline_rounded,
+                  size: 16,
+                  color: emissionKg <= 2.5
+                      ? AppTheme.successGreen
+                      : AppTheme.secondaryBlue,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    emissionKg == 0
+                        ? 'Calculate your daily footprint from commute, food, and energy'
+                        : emissionKg <= 2.5
+                            ? 'Great job! Your carbon output is below student average today'
+                            : 'Logged across transport, diet, and device energy usage',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.darkTextMuted,
+                          fontSize: 11,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
-    ).animate(delay: 200.ms).fadeIn().scale(begin: const Offset(0.9, 0.9));
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05);
   }
 }
 
@@ -760,6 +798,7 @@ class _HabitProgressRow extends StatelessWidget {
     final isScreenDone = checklist['Screen Time < 4h'] == true;
     final isWaterDone = checklist['Water (8 glasses)'] == true;
 
+    // Simplified palette: Primary Teal, Secondary Blue, Success Green, Accent Amber, Cyan
     final habits = [
       {
         'label': 'Sleep',
@@ -770,8 +809,8 @@ class _HabitProgressRow extends StatelessWidget {
                     progress['sleep']!.status != 'Not logged'
                 ? progress['sleep']!.status
                 : '8h')
-            : 'Not logged',
-        'color': const Color(0xFF9D4EDD),
+            : 'Pending',
+        'color': AppTheme.secondaryBlue,
       },
       {
         'label': 'Diet',
@@ -782,8 +821,8 @@ class _HabitProgressRow extends StatelessWidget {
                     progress['diet']!.status != 'Not logged'
                 ? progress['diet']!.status
                 : 'Healthy')
-            : 'Not logged',
-        'color': const Color(0xFF00F5D4),
+            : 'Pending',
+        'color': AppTheme.primaryTeal,
       },
       {
         'label': 'Exercise',
@@ -794,8 +833,8 @@ class _HabitProgressRow extends StatelessWidget {
                     progress['exercise']!.status != 'Not logged'
                 ? progress['exercise']!.status
                 : '30m')
-            : 'Not logged',
-        'color': const Color(0xFF2E6EE1),
+            : 'Pending',
+        'color': AppTheme.successGreen,
       },
       {
         'label': 'Screen',
@@ -806,8 +845,8 @@ class _HabitProgressRow extends StatelessWidget {
                     progress['screen']!.status != 'Not logged'
                 ? progress['screen']!.status
                 : '< 4h')
-            : 'Not logged',
-        'color': const Color(0xFFDAA520),
+            : 'Pending',
+        'color': AppTheme.accentAmber,
       },
       {
         'label': 'Water',
@@ -818,8 +857,8 @@ class _HabitProgressRow extends StatelessWidget {
                     progress['water']!.status != 'Not logged'
                 ? progress['water']!.status
                 : '8 gl')
-            : 'Not logged',
-        'color': const Color(0xFF00B4D8),
+            : 'Pending',
+        'color': const Color(0xFF38BDF8),
       },
     ];
 
@@ -843,12 +882,14 @@ class _HabitProgressRow extends StatelessWidget {
 }
 
 class _HabitTile extends StatelessWidget {
-  const _HabitTile(
-      {required this.label,
-      required this.icon,
-      required this.value,
-      required this.detail,
-      required this.color});
+  const _HabitTile({
+    required this.label,
+    required this.icon,
+    required this.value,
+    required this.detail,
+    required this.color,
+  });
+
   final String label;
   final IconData icon;
   final double value;
@@ -858,46 +899,68 @@ class _HabitTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [color.withOpacity(0.12), AppTheme.darkCard],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.4), width: 1.2),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.15), blurRadius: 10)],
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.darkBorder, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 7),
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 17),
+          ),
+          const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-                value: value,
-                backgroundColor: AppTheme.darkBorder,
-                color: color,
-                minHeight: 5),
+              value: value,
+              backgroundColor: AppTheme.darkBorder,
+              color: color,
+              minHeight: 4,
+            ),
           ),
-          const SizedBox(height: 6),
-          Text(label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: AppTheme.darkTextMuted, fontSize: 10)),
-          Text(detail,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: color, fontWeight: FontWeight.w600, fontSize: 9),
-              overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.darkText,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            detail,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: value >= 1.0 ? color : AppTheme.darkTextMuted,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 10,
+                ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );
   }
 }
 
-// ── Today's Checklist Card on Dashboard ──────────────────────────────────────
+// ── Today's Checklist Quick Card ─────────────────────────────────────────────
 class _DashboardChecklistCard extends ConsumerWidget {
   const _DashboardChecklistCard({
     required this.checklist,
@@ -926,11 +989,18 @@ class _DashboardChecklistCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.darkCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.darkBorder),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppTheme.darkBorder, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.18),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -941,69 +1011,82 @@ class _DashboardChecklistCard extends ConsumerWidget {
               Row(
                 children: [
                   const Icon(Icons.check_circle_outline_rounded,
-                      color: AppTheme.primaryGreen, size: 18),
+                      color: AppTheme.primaryTeal, size: 18),
                   const SizedBox(width: 8),
-                  Text('Today\'s Checklist',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  Text(
+                    "Today's Checklist",
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: AppTheme.darkText,
-                          fontWeight: FontWeight.w700)),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                  ),
                 ],
               ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen.withOpacity(0.12),
+                  color: AppTheme.primaryTeal.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: AppTheme.primaryGreen.withOpacity(0.3)),
+                  border: Border.all(
+                      color: AppTheme.primaryTeal.withOpacity(0.25), width: 1),
                 ),
-                child: Text('$completedCount / 5 done',
-                    style: const TextStyle(
-                        fontSize: 11,
-                        color: AppTheme.primaryGreen,
-                        fontWeight: FontWeight.w700)),
+                child: Text(
+                  '$completedCount / 5 completed',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.primaryTeal,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           ..._items.map((key) {
             final isDone = checklist[key] == true;
             final icon = _icons[key] ?? Icons.check_circle_outline;
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: InkWell(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 onTap: () {
                   ref.read(habitsProvider.notifier).toggle(key, !isDone);
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: isDone
-                        ? AppTheme.primaryGreen.withOpacity(0.08)
-                        : AppTheme.darkBackground.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(12),
+                        ? AppTheme.primaryTeal.withOpacity(0.08)
+                        : AppTheme.darkSurface,
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                        color: isDone
-                            ? AppTheme.primaryGreen.withOpacity(0.4)
-                            : AppTheme.darkBorder.withOpacity(0.6)),
+                      color: isDone
+                          ? AppTheme.primaryTeal.withOpacity(0.35)
+                          : AppTheme.darkBorder,
+                      width: 1,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(icon,
-                          size: 18,
-                          color: isDone
-                              ? AppTheme.primaryGreen
-                              : AppTheme.darkTextMuted),
+                      Icon(
+                        icon,
+                        size: 18,
+                        color: isDone
+                            ? AppTheme.primaryTeal
+                            : AppTheme.darkTextMuted,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           key,
                           style: TextStyle(
                             fontSize: 13,
+                            fontWeight:
+                                isDone ? FontWeight.w600 : FontWeight.w400,
                             color: isDone
                                 ? AppTheme.darkText
                                 : AppTheme.darkTextMuted,
@@ -1014,22 +1097,23 @@ class _DashboardChecklistCard extends ConsumerWidget {
                       ),
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        width: 20,
-                        height: 20,
+                        width: 22,
+                        height: 22,
                         decoration: BoxDecoration(
                           color: isDone
-                              ? AppTheme.primaryGreen
+                              ? AppTheme.primaryTeal
                               : Colors.transparent,
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                              color: isDone
-                                  ? AppTheme.primaryGreen
-                                  : AppTheme.darkBorder,
-                              width: 1.5),
+                            color: isDone
+                                ? AppTheme.primaryTeal
+                                : AppTheme.darkBorder,
+                            width: 1.5,
+                          ),
                         ),
                         child: isDone
                             ? const Icon(Icons.check_rounded,
-                                color: Colors.black, size: 14)
+                                color: Colors.black, size: 15)
                             : null,
                       ),
                     ],
@@ -1044,7 +1128,7 @@ class _DashboardChecklistCard extends ConsumerWidget {
   }
 }
 
-// ── Weekly Carbon Bar Chart ──────────────────────────────────────────────────
+// ── Weekly Carbon Trend (SMOOTH LINE CHART) ──────────────────────────────────
 class _WeeklyChart extends StatelessWidget {
   const _WeeklyChart({required this.data});
   final List<double> data;
@@ -1053,116 +1137,231 @@ class _WeeklyChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final chartData =
         data.length == 7 ? data : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-    final days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    final maxVal = chartData.isEmpty
-        ? 8.0
-        : (chartData.reduce((a, b) => a > b ? a : b) + 2.0).clamp(6.0, 50.0);
+    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    // Today's index in Monday=0 ... Sunday=6
+    final todayIndex = (DateTime.now().weekday - 1) % 7;
+
+    double maxVal = 6.0;
+    for (final v in chartData) {
+      if (v > maxVal) maxVal = v;
+    }
+    maxVal = (maxVal + 1.5).ceilToDouble();
+
+    final spots = chartData.asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), e.value);
+    }).toList();
 
     return Container(
-      height: 180,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 20, 18, 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppTheme.secondaryTeal.withOpacity(0.08), AppTheme.darkCard],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: AppTheme.secondaryTeal.withOpacity(0.4), width: 1.2),
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppTheme.darkBorder, width: 1),
         boxShadow: [
           BoxShadow(
-              color: AppTheme.secondaryTeal.withOpacity(0.1), blurRadius: 16)
+            color: Colors.black.withOpacity(0.18),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
-      child: BarChart(
-        BarChartData(
-          maxY: maxVal,
-          barTouchData: BarTouchData(enabled: false),
-          titlesData: FlTitlesData(
-            leftTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (v, meta) {
-                  final idx = v.toInt();
-                  if (idx >= 0 && idx < days.length) {
-                    return Text(days[idx],
-                        style: TextStyle(
-                            color: AppTheme.darkTextMuted.withOpacity(0.6),
-                            fontSize: 11));
-                  }
-                  return const SizedBox.shrink();
-                },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '7-Day Footprint',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: AppTheme.darkText,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppTheme.primaryTeal,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'kg CO₂e / day',
+                    style: TextStyle(
+                      color: AppTheme.darkTextMuted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 180,
+            child: LineChart(
+              LineChartData(
+                minX: 0,
+                maxX: 6,
+                minY: 0,
+                maxY: maxVal,
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final dayName = days[spot.x.toInt()];
+                        return LineTooltipItem(
+                          '$dayName\n${spot.y.toStringAsFixed(2)} kg',
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: maxVal > 10 ? 5 : 2,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: AppTheme.darkBorder.withOpacity(0.5),
+                    strokeWidth: 1,
+                    dashArray: [4, 4],
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 28,
+                      interval: maxVal > 10 ? 5 : 2,
+                      getTitlesWidget: (v, meta) {
+                        if (v == 0) return const SizedBox.shrink();
+                        return Text(
+                          v.toInt().toString(),
+                          style: TextStyle(
+                            color: AppTheme.darkTextMuted.withOpacity(0.7),
+                            fontSize: 10,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 1,
+                      reservedSize: 26,
+                      getTitlesWidget: (v, meta) {
+                        final idx = v.toInt();
+                        if (idx >= 0 && idx < days.length) {
+                          final isToday = idx == todayIndex;
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              days[idx],
+                              style: TextStyle(
+                                color: isToday
+                                    ? AppTheme.primaryTeal
+                                    : AppTheme.darkTextMuted,
+                                fontWeight: isToday
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                fontSize: 11,
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    curveSmoothness: 0.35,
+                    color: AppTheme.primaryTeal,
+                    barWidth: 2.5,
+                    isStrokeCapRound: true,
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          AppTheme.primaryTeal.withOpacity(0.20),
+                          AppTheme.primaryTeal.withOpacity(0.0),
+                        ],
+                      ),
+                    ),
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        final isToday = index == todayIndex;
+                        if (isToday) {
+                          return FlDotCirclePainter(
+                            radius: 5.5,
+                            color: AppTheme.primaryTeal,
+                            strokeWidth: 2.5,
+                            strokeColor: Colors.black,
+                          );
+                        }
+                        return FlDotCirclePainter(
+                          radius: 2.5,
+                          color: AppTheme.primaryTeal.withOpacity(0.6),
+                          strokeWidth: 0,
+                          strokeColor: Colors.transparent,
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          gridData: FlGridData(
-            show: true,
-            getDrawingHorizontalLine: (_) => FlLine(
-                color: AppTheme.darkBorder.withOpacity(0.3), strokeWidth: 1),
-            drawVerticalLine: false,
-          ),
-          borderData: FlBorderData(show: false),
-          barGroups: chartData.asMap().entries.map((e) {
-            final isZero = e.value == 0;
-            return BarChartGroupData(
-              x: e.key,
-              barRods: [
-                BarChartRodData(
-                  toY: isZero ? 0.3 : e.value,
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: isZero
-                        ? [
-                            AppTheme.primaryGreen.withOpacity(0.15),
-                            AppTheme.primaryGreen.withOpacity(0.05)
-                          ]
-                        : [
-                            AppTheme.secondaryTeal,
-                            AppTheme.primaryGreen,
-                          ],
-                  ),
-                  width: 20,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(6)),
-                )
-              ],
-            );
-          }).toList(),
-        ),
+        ],
       ),
-    ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.2);
+    ).animate(delay: 200.ms).fadeIn().slideY(begin: 0.05);
   }
 }
 
-// ── Welcome Tip Card ─────────────────────────────────────────────────────────
+// ── Daily Eco Tip Card ───────────────────────────────────────────────────────
 class _InsightTipCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.accentAmber.withOpacity(0.12),
-            AppTheme.darkCard,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
-            color: AppTheme.accentAmber.withOpacity(0.4), width: 1.2),
+          color: AppTheme.accentAmber.withOpacity(0.25),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-              color: AppTheme.accentAmber.withOpacity(0.1), blurRadius: 16)
+            color: Colors.black.withOpacity(0.16),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
@@ -1171,28 +1370,34 @@ class _InsightTipCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.accentAmber.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
+              color: AppTheme.accentAmber.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: AppTheme.accentAmber.withOpacity(0.25), width: 1),
             ),
             child: const Icon(Icons.lightbulb_outline_rounded,
                 color: AppTheme.accentAmber, size: 20),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Daily Eco Tip',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: AppTheme.accentAmber,
-                          fontWeight: FontWeight.w700,
-                        )),
+                Text(
+                  'Daily Eco Tip',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppTheme.accentAmber,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                ),
                 const SizedBox(height: 4),
                 Text(
-                  'Switching to a vegetarian lunch saves up to 1.5 kg CO₂ compared to red meat. Every meal counts!',
+                  'Switching to a plant-forward lunch saves up to 1.5 kg CO₂ compared to red meat. Every meal counts toward a cleaner planet!',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppTheme.darkTextMuted,
                         height: 1.4,
+                        fontSize: 12,
                       ),
                 ),
               ],
@@ -1200,6 +1405,116 @@ class _InsightTipCard extends StatelessWidget {
           ),
         ],
       ),
-    ).animate(delay: 400.ms).fadeIn();
+    ).animate(delay: 250.ms).fadeIn();
+  }
+}
+
+// ── Points Wallet Card (Rewards Section) ─────────────────────────────────────
+class _PointsWalletCard extends StatelessWidget {
+  const _PointsWalletCard({
+    required this.points,
+    required this.streak,
+    required this.badges,
+  });
+
+  final int points;
+  final int streak;
+  final int badges;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatChip(
+            label: 'EcoPoints',
+            value: '$points',
+            icon: Icons.stars_rounded,
+            color: AppTheme.accentAmber,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _StatChip(
+            label: 'Streak',
+            value: '$streak ${streak == 1 ? "day" : "days"}',
+            icon: Icons.local_fire_department_rounded,
+            color: AppTheme.warningOrange,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _StatChip(
+            label: 'Badges',
+            value: '$badges',
+            icon: Icons.military_tech_rounded,
+            color: AppTheme.secondaryBlue,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+      decoration: BoxDecoration(
+        color: AppTheme.darkCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.darkBorder, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppTheme.darkText,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.darkTextMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+        ],
+      ),
+    );
   }
 }

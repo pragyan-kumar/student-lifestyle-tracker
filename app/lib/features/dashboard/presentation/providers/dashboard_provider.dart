@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class DashboardHabitProgressItem {
   final String status;
@@ -180,6 +181,7 @@ class DashboardSummaryData {
 
 final dashboardSummaryProvider =
     FutureProvider<DashboardSummaryData>((ref) async {
+  ref.watch(authProvider); // Re-run when user logs in/out
   final dio = ref.watch(dioProvider);
   try {
     final res = await dio.get('/dashboard/summary');

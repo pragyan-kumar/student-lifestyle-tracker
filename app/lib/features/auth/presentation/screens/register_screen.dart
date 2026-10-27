@@ -50,7 +50,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           final statusCode = err.response?.statusCode;
           if (err.type == DioExceptionType.connectionError ||
               err.type == DioExceptionType.unknown) {
-            _errorMsg = 'Cannot reach the server. Make sure the backend is running on port 5001.';
+            _errorMsg = 'Cannot reach the server. Please check your internet connection.';
           } else if (err.type == DioExceptionType.connectionTimeout ||
               err.type == DioExceptionType.receiveTimeout ||
               err.type == DioExceptionType.sendTimeout) {

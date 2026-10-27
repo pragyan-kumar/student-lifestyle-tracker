@@ -27,9 +27,9 @@ class AuthUser {
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
-        id: json['_id'] as String,
-        name: json['name'] as String,
-        email: json['email'] as String,
+        id: (json['_id'] ?? json['id'] ?? '').toString(),
+        name: json['name'] as String? ?? 'Student',
+        email: json['email'] as String? ?? '',
         avatar: json['avatar'] as String?,
         points: (json['points'] as num?)?.toInt() ?? 0,
         streakDays: (json['streakDays'] as num?)?.toInt() ?? 0,
@@ -159,13 +159,19 @@ class AuthRepository {
   // ── Helpers ───────────────────────────────────────────────────────────────
   Future<void> _persistTokens(Map<String, dynamic> data) async {
     await _storage.write(
-        key: _kAccessToken, value: data['accessToken'] as String);
+        key: _kAccessToken, value: data['accessToken']?.toString() ?? '');
     await _storage.write(
-        key: _kRefreshToken, value: data['refreshToken'] as String);
-    final user = data['user'] as Map<String, dynamic>;
-    await _storage.write(key: _kUserId, value: user['_id'] as String);
-    await _storage.write(key: _kUserName, value: user['name'] as String);
-    await _storage.write(key: _kUserEmail, value: user['email'] as String);
+        key: _kRefreshToken, value: data['refreshToken']?.toString() ?? '');
+    final user = data['user'] as Map<String, dynamic>? ?? {};
+    await _storage.write(
+        key: _kUserId,
+        value: (user['_id'] ?? user['id'] ?? '').toString());
+    await _storage.write(
+        key: _kUserName,
+        value: (user['name'] ?? 'Student').toString());
+    await _storage.write(
+        key: _kUserEmail,
+        value: (user['email'] ?? '').toString());
   }
 }
 

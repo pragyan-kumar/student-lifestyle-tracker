@@ -55,31 +55,77 @@ class _CarbonScreenState extends ConsumerState<CarbonScreen>
           const SizedBox(width: 8),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
+          preferredSize: const Size.fromHeight(52),
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            height: 44,
+            margin: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+            padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
-              color: AppTheme.darkCard,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppTheme.darkBorder),
+              color: AppTheme.darkSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.darkBorder, width: 1),
             ),
             child: TabBar(
               controller: _tabController,
               indicator: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppTheme.primaryGreen, AppTheme.secondaryTeal],
+                color: AppTheme.darkCardElevated,
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(
+                  color: AppTheme.primaryTeal.withOpacity(0.35),
+                  width: 1,
                 ),
-                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.25),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               dividerColor: Colors.transparent,
-              labelColor: Colors.black,
+              labelColor: AppTheme.primaryTeal,
               unselectedLabelColor: AppTheme.darkTextMuted,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                letterSpacing: 0.1,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+              ),
               tabs: const [
-                Tab(icon: Icon(Icons.directions_car_rounded, size: 18), text: 'Transport'),
-                Tab(icon: Icon(Icons.restaurant_rounded, size: 18), text: 'Food'),
-                Tab(icon: Icon(Icons.bolt_rounded, size: 18), text: 'Energy'),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.directions_car_rounded, size: 16),
+                      SizedBox(width: 5),
+                      Text('Transport'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.restaurant_rounded, size: 16),
+                      SizedBox(width: 5),
+                      Text('Food'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.bolt_rounded, size: 16),
+                      SizedBox(width: 5),
+                      Text('Energy'),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -119,27 +165,27 @@ class _SummaryCard extends StatelessWidget {
     final hasData = total > 0;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppTheme.primaryGreen.withOpacity(0.15),
-              AppTheme.secondaryTeal.withOpacity(0.08),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppTheme.primaryGreen.withOpacity(0.3)),
+          color: AppTheme.darkCard,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppTheme.darkBorder, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.18),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
             // Donut chart
             SizedBox(
-              width: 80,
-              height: 80,
+              width: 76,
+              height: 76,
               child: hasData
                   ? PieChart(PieChartData(
                       sectionsSpace: 2,
@@ -147,20 +193,20 @@ class _SummaryCard extends StatelessWidget {
                       sections: [
                         PieChartSectionData(
                           value: state.transportKg,
-                          color: AppTheme.primaryGreen,
-                          radius: 18,
+                          color: AppTheme.primaryTeal,
+                          radius: 16,
                           title: '',
                         ),
                         PieChartSectionData(
                           value: state.foodKg,
-                          color: AppTheme.secondaryTeal,
-                          radius: 18,
+                          color: AppTheme.secondaryBlue,
+                          radius: 16,
                           title: '',
                         ),
                         PieChartSectionData(
                           value: state.energyKg,
                           color: AppTheme.accentAmber,
-                          radius: 18,
+                          radius: 16,
                           title: '',
                         ),
                       ],
@@ -169,12 +215,12 @@ class _SummaryCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                            color: AppTheme.darkBorder, width: 6),
+                            color: AppTheme.darkBorder, width: 5),
                       ),
                       child: const Center(
                         child: Text('—',
                             style: TextStyle(
-                                color: AppTheme.darkTextMuted, fontSize: 18)),
+                                color: AppTheme.darkTextMuted, fontSize: 16)),
                       ),
                     ),
             ),
@@ -183,24 +229,32 @@ class _SummaryCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Today's Total",
-                      style: TextStyle(color: AppTheme.darkTextMuted, fontSize: 12)),
-                  const SizedBox(height: 2),
+                  Text(
+                    "TODAY'S TOTAL",
+                    style: TextStyle(
+                      color: AppTheme.darkTextMuted,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
                   Text(
                     '${total.toStringAsFixed(2)} kg CO₂e',
                     style: const TextStyle(
-                      color: AppTheme.primaryGreen,
+                      color: AppTheme.primaryTeal,
                       fontSize: 22,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
                     children: [
-                      _MiniChip('🚗 ${state.transportKg.toStringAsFixed(1)}', AppTheme.primaryGreen),
-                      const SizedBox(width: 6),
-                      _MiniChip('🍽 ${state.foodKg.toStringAsFixed(1)}', AppTheme.secondaryTeal),
-                      const SizedBox(width: 6),
+                      _MiniChip('🚗 ${state.transportKg.toStringAsFixed(1)}', AppTheme.primaryTeal),
+                      _MiniChip('🍽 ${state.foodKg.toStringAsFixed(1)}', AppTheme.secondaryBlue),
                       _MiniChip('⚡ ${state.energyKg.toStringAsFixed(1)}', AppTheme.accentAmber),
                     ],
                   ),
@@ -209,7 +263,7 @@ class _SummaryCard extends StatelessWidget {
             ),
           ],
         ),
-      ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.05),
+      ).animate().fadeIn(duration: 350.ms).slideY(begin: -0.04),
     );
   }
 }
@@ -220,14 +274,20 @@ class _MiniChip extends StatelessWidget {
   final Color color;
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
           color: color.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.25), width: 1),
         ),
-        child: Text(text,
-            style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600)),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: color,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       );
 }
 
