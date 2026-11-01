@@ -32,6 +32,10 @@ jobs:
         working-directory: ./app
         run: flutter pub get
 
+      - name: Generate Launcher Icons
+        working-directory: app
+        run: dart run flutter_launcher_icons
+
       - name: Build APK
         working-directory: ./app
         env:
