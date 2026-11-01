@@ -23,7 +23,12 @@ const PORT = process.env.PORT || 5001;
 const corsOptions = {
   origin: true, // reflect any origin (Flutter Web uses dynamic localhost ports)
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+  ],
   credentials: true,
   optionsSuccessStatus: 200,
 };
@@ -35,13 +40,12 @@ app.use(
   helmet({
     crossOriginResourcePolicy: false,
     crossOriginOpenerPolicy: false,
-    contentSecurityPolicy: false,   // CSP blocks XHR in dev
+    contentSecurityPolicy: false, // CSP blocks XHR in dev
   }),
 );
 app.use(express.json({ limit: "10kb" }));
 app.use(
   morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) } }),
-
 );
 
 // Global rate limiter: 100 req / 15 min per IP
