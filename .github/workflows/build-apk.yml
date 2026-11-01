@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
@@ -25,12 +25,17 @@ jobs:
           channel: "stable"
           cache: true
 
+      - name: Precache Android artifacts
+        run: flutter precache --android
+
       - name: Install dependencies
         working-directory: ./app
         run: flutter pub get
 
       - name: Build APK
         working-directory: ./app
+        env:
+          GRADLE_OPTS: "-Djava.net.preferIPv4Stack=true -Xmx4096m"
         run: flutter build apk --release --dart-define=API_BASE_URL=https://lifestyle-management-backend.onrender.com/api/v1
 
       - name: Upload APK Artifact

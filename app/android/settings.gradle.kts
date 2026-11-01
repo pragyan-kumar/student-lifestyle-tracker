@@ -14,6 +14,7 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven { url = java.net.URI("https://storage.googleapis.com/download.flutter.io") }
     }
 }
 
