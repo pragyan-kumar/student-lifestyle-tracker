@@ -1,0 +1,17 @@
+{
+  "include": [
+    "."
+  ],
+  "exclude": [
+    "**/__pycache__"
+  ],
+  "extraPaths": [
+    ".",
+    "src",
+    "../.venv/Lib/site-packages",
+    "C:/Users/ADMIN/AppData/Local/Programs/Python/Python39/Lib/site-packages"
+  ],
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false
+}
+

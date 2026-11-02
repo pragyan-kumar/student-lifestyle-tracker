@@ -1,0 +1,18 @@
+{
+  "include": [
+    "ml_service"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__"
+  ],
+  "extraPaths": [
+    "ml_service",
+    "ml_service/src",
+    ".venv/Lib/site-packages",
+    "C:/Users/ADMIN/AppData/Local/Programs/Python/Python39/Lib/site-packages"
+  ],
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false
+}
+

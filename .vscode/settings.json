@@ -1,0 +1,20 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/ml_service",
+    "${workspaceFolder}/ml_service/src",
+    "${workspaceFolder}/.venv/Lib/site-packages",
+    "C:/Users/ADMIN/AppData/Local/Programs/Python/Python39/Lib/site-packages"
+  ],
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/ml_service",
+    "${workspaceFolder}/ml_service/src",
+    "${workspaceFolder}/.venv/Lib/site-packages",
+    "C:/Users/ADMIN/AppData/Local/Programs/Python/Python39/Lib/site-packages"
+  ],
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingImports": "none",
+    "reportMissingModuleSource": "none"
+  }
+}

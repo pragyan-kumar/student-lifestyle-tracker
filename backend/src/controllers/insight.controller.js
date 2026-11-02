@@ -143,21 +143,48 @@ exports.triggerAnalysis = async (req, res) => {
 function generateRuleBasedInsights(f) {
   const insights = [];
   const {
-    avg_sleep_hours: sleep,
-    avg_exercise_mins: exercise,
-    avg_screen_hours: screen,
-    meal_type: meal,
-    avg_carbon_kg: carbon,
-    streak_days: streak,
-  } = f;
+    avg_sleep_hours: sleep = 7,
+    avg_exercise_mins: exercise = 30,
+    avg_screen_hours: screen = 4,
+    meal_type: meal = "mixed",
+    avg_carbon_kg: carbon = 4,
+    streak_days: streak = 0,
+    days_of_data: days = 1,
+  } = f || {};
 
+  // 1. Lifestyle Profile & Eco Health estimation
+  let persona = "Balanced Achiever";
+  let ecoScore = 70;
+  if (carbon < 3.2 && (meal === "vegan" || meal === "vegetarian")) {
+    persona = "Eco Champion";
+    ecoScore = 85;
+  } else if (sleep < 6 && screen >= 6) {
+    persona = "Digital Burnout";
+    ecoScore = 40;
+  } else if (sleep < 6) {
+    persona = "Sleep Deprived Scholar";
+    ecoScore = 50;
+  } else if (exercise < 20 && carbon > 5) {
+    persona = "Sedentary High-Emission";
+    ecoScore = 35;
+  }
+
+  insights.push({
+    category: "AI Persona",
+    priority: 1,
+    title: `Profile: ${persona} (Eco Score: ${ecoScore}/100)`,
+    description: `Analyzed lifestyle habits over ${days} day(s) of records with an estimated Eco Index of ${ecoScore}/100.`,
+    action: "Explore personalized recommendations",
+  });
+
+  // 2. Sleep
   if (sleep < 6) {
     insights.push({
       category: "Sleep",
       priority: 1,
       title: "Critical Sleep Deficit Detected",
       description: `Your average sleep is ${sleep.toFixed(1)}h — well below the 6–9h healthy range. This increases burnout and exam fatigue risk.`,
-      action: "Set a sleep reminder",
+      action: "Set a sleep reminder for 10:30 PM",
     });
   } else if (sleep < 7) {
     insights.push({
@@ -167,8 +194,17 @@ function generateRuleBasedInsights(f) {
       description: `You're averaging ${sleep.toFixed(1)}h. Aim for 7–8h during exam periods to maintain focus and memory retention.`,
       action: "Adjust bedtime by 30 min",
     });
+  } else {
+    insights.push({
+      category: "Sleep",
+      priority: 4,
+      title: "Optimal Rest Zone (7–9h)",
+      description: `Averaging ${sleep.toFixed(1)}h of rest. Consistent sleep hygiene boosts cognitive retention and mood stability.`,
+      action: "Keep wake time consistent",
+    });
   }
 
+  // 3. Exercise
   if (exercise < 20) {
     insights.push({
       category: "Exercise",
@@ -185,8 +221,17 @@ function generateRuleBasedInsights(f) {
       description: `You're at ${Math.round(exercise)} min/day. Adding 10 more minutes earns 15 bonus EcoPoints.`,
       action: "Add 10-min stretch",
     });
+  } else {
+    insights.push({
+      category: "Exercise",
+      priority: 4,
+      title: "Active Target Achieved! (>30 min/day)",
+      description: `Averaging ${Math.round(exercise)} active minutes daily! Regular activity lowers exam stress and elevates focus.`,
+      action: "Maintain daily activity streak",
+    });
   }
 
+  // 4. Carbon & Diet
   if (carbon > 5) {
     const savings = ((carbon - 2) * 0.3).toFixed(1);
     insights.push({
@@ -195,6 +240,14 @@ function generateRuleBasedInsights(f) {
       title: "High Carbon Footprint This Week",
       description: `Daily average: ${carbon.toFixed(1)} kg CO₂. Switching 2 auto rides to metro could save ~${savings} kg CO₂/week.`,
       action: "Plan metro commute",
+    });
+  } else if (carbon > 0) {
+    insights.push({
+      category: "Carbon",
+      priority: 4,
+      title: "Low Campus Carbon Footprint",
+      description: `Emitting ${carbon.toFixed(1)} kg CO₂/day places you among the greenest student percentiles.`,
+      action: "Check campus leaderboard ranking",
     });
   }
 
@@ -207,7 +260,15 @@ function generateRuleBasedInsights(f) {
         "Meat-heavy meals contribute ~7.2 kg CO₂/day. 2 vegetarian days/week saves ~9.4 kg CO₂ monthly.",
       action: "Try vegetarian tomorrow",
     });
-  } else if (meal === "mixed") {
+  } else if (meal === "vegan" || meal === "vegetarian") {
+    insights.push({
+      category: "Diet",
+      priority: 4,
+      title: "Eco-Friendly Plant-Forward Diet",
+      description: `Your ${meal} meal choice saves ~3.5 kg CO₂ daily compared to meat-heavy student diets.`,
+      action: "Pair with 8 glasses of water",
+    });
+  } else {
     insights.push({
       category: "Diet",
       priority: 3,
@@ -217,6 +278,7 @@ function generateRuleBasedInsights(f) {
     });
   }
 
+  // 5. Screen Time
   if (screen > 6) {
     insights.push({
       category: "Screen Time",
@@ -227,10 +289,19 @@ function generateRuleBasedInsights(f) {
     });
   }
 
-  if (streak >= 5 && streak < 7) {
+  // 6. Streak
+  if (streak === 0) {
     insights.push({
       category: "Rewards",
-      priority: 3,
+      priority: 2,
+      title: "Start Your Streak Today!",
+      description: "Log today's habits to ignite your Day 1 streak and claim 20 bonus EcoPoints.",
+      action: "View today's checklist",
+    });
+  } else if (streak >= 5 && streak < 7) {
+    insights.push({
+      category: "Rewards",
+      priority: 2,
       title: `${7 - streak} Days Away from a 7-Day Badge!`,
       description: `You're on a ${streak}-day streak! Keep going to unlock the 7-Day Streak badge and earn 50 bonus points.`,
       action: "View today's checklist",
@@ -238,16 +309,5 @@ function generateRuleBasedInsights(f) {
   }
 
   insights.sort((a, b) => a.priority - b.priority);
-  return insights.slice(0, 4).length
-    ? insights.slice(0, 4)
-    : [
-        {
-          category: "General",
-          priority: 5,
-          title: "Great Work! Keep It Up",
-          description:
-            "Your lifestyle habits look healthy this week. Keep logging to unlock more personalised insights.",
-          action: "View dashboard",
-        },
-      ];
+  return insights.slice(0, 4);
 }

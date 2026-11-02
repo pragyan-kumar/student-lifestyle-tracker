@@ -40,3 +40,5 @@ ml_service/.env
 .env
 .env.local
 *.swp
+.venv/
+venv/
