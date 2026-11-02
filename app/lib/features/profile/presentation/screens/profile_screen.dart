@@ -202,6 +202,7 @@ class ProfileScreen extends ConsumerWidget {
   static void _showNotificationPreferences(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppTheme.darkCard,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -215,6 +216,7 @@ class ProfileScreen extends ConsumerWidget {
   static void _showThemeAndAppearance(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppTheme.darkCard,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -228,6 +230,7 @@ class ProfileScreen extends ConsumerWidget {
   static void _showDataAndPrivacy(BuildContext context, AuthUser? user, double savedKg) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppTheme.darkCard,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -241,6 +244,7 @@ class ProfileScreen extends ConsumerWidget {
   static void _showSdgImpactReport(BuildContext context, AuthUser? user, double savedKg) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppTheme.darkBackground,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -254,6 +258,7 @@ class ProfileScreen extends ConsumerWidget {
   static void _showAboutEcoLife(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppTheme.darkCard,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -320,6 +325,7 @@ class ProfileScreen extends ConsumerWidget {
   static void _showAccountSettings(BuildContext context, AuthUser? user) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: AppTheme.darkCard,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -424,109 +430,118 @@ class _NotificationPreferencesSheetState extends State<_NotificationPreferencesS
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(child: _sheetHandle()),
-          const SizedBox(height: 18),
-          Row(
+    return SafeArea(
+      top: false,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 36),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.secondaryTeal.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.notifications_active_rounded, color: AppTheme.secondaryTeal, size: 22),
+              Center(child: _sheetHandle()),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.secondaryTeal.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.notifications_active_rounded, color: AppTheme.secondaryTeal, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Notification Preferences',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: AppTheme.darkText,
+                              fontWeight: FontWeight.bold,
+                            )),
+                        Text('Customize routine nudges & eco notifications',
+                            style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Notification Preferences',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: AppTheme.darkText,
-                          fontWeight: FontWeight.bold,
-                        )),
-                    Text('Customize routine nudges & eco notifications',
-                        style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
-                  ],
+              const SizedBox(height: 20),
+              if (!_loaded)
+                const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+              else ...[
+                _switchTile(
+                  title: 'Daily Habit Reminders',
+                  subtitle: 'Smart alerts to log sleep, nutrition, and water hydration',
+                  icon: Icons.alarm_rounded,
+                  value: _dailyHabitReminders,
+                  onChanged: (v) {
+                    setState(() => _dailyHabitReminders = v);
+                    _savePreference('pref_notif_habits', v);
+                  },
+                ),
+                _switchTile(
+                  title: 'EcoPoints & Streak Safeguard',
+                  subtitle: 'Notify before midnight if your day streak is at risk',
+                  icon: Icons.local_fire_department_rounded,
+                  value: _streakAlerts,
+                  onChanged: (v) {
+                    setState(() => _streakAlerts = v);
+                    _savePreference('pref_notif_streak', v);
+                  },
+                ),
+                _switchTile(
+                  title: 'Carbon Impact Digest',
+                  subtitle: 'Weekly report on kg CO₂ emissions prevented',
+                  icon: Icons.eco_rounded,
+                  value: _carbonDigest,
+                  onChanged: (v) {
+                    setState(() => _carbonDigest = v);
+                    _savePreference('pref_notif_carbon', v);
+                  },
+                ),
+                _switchTile(
+                  title: 'AI Lifestyle & Wellness Tips',
+                  subtitle: 'Predictive lifestyle suggestions based on daily energy levels',
+                  icon: Icons.auto_awesome_rounded,
+                  value: _aiInsights,
+                  onChanged: (v) {
+                    setState(() => _aiInsights = v);
+                    _savePreference('pref_notif_ai', v);
+                  },
+                ),
+              ],
+              const SizedBox(height: 22),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.secondaryTeal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Notification settings updated.'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  child: const Text('Save Preferences', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          if (!_loaded)
-            const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
-          else ...[
-            _switchTile(
-              title: 'Daily Habit Reminders',
-              subtitle: 'Smart alerts to log sleep, nutrition, and water hydration',
-              icon: Icons.alarm_rounded,
-              value: _dailyHabitReminders,
-              onChanged: (v) {
-                setState(() => _dailyHabitReminders = v);
-                _savePreference('pref_notif_habits', v);
-              },
-            ),
-            _switchTile(
-              title: 'EcoPoints & Streak Safeguard',
-              subtitle: 'Notify before midnight if your day streak is at risk',
-              icon: Icons.local_fire_department_rounded,
-              value: _streakAlerts,
-              onChanged: (v) {
-                setState(() => _streakAlerts = v);
-                _savePreference('pref_notif_streak', v);
-              },
-            ),
-            _switchTile(
-              title: 'Carbon Impact Digest',
-              subtitle: 'Weekly report on kg CO₂ emissions prevented',
-              icon: Icons.eco_rounded,
-              value: _carbonDigest,
-              onChanged: (v) {
-                setState(() => _carbonDigest = v);
-                _savePreference('pref_notif_carbon', v);
-              },
-            ),
-            _switchTile(
-              title: 'AI Lifestyle & Wellness Tips',
-              subtitle: 'Predictive lifestyle suggestions based on daily energy levels',
-              icon: Icons.auto_awesome_rounded,
-              value: _aiInsights,
-              onChanged: (v) {
-                setState(() => _aiInsights = v);
-                _savePreference('pref_notif_ai', v);
-              },
-            ),
-          ],
-          const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.secondaryTeal,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Notification settings updated.'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              child: const Text('Save Preferences', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -602,128 +617,137 @@ class _ThemeAppearanceSheetState extends State<_ThemeAppearanceSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(child: _sheetHandle()),
-          const SizedBox(height: 18),
-          Row(
+    return SafeArea(
+      top: false,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 36),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentAmber.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.palette_rounded, color: AppTheme.accentAmber, size: 22),
+              Center(child: _sheetHandle()),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentAmber.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.palette_rounded, color: AppTheme.accentAmber, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Theme & Appearance',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: AppTheme.darkText,
+                              fontWeight: FontWeight.bold,
+                            )),
+                        Text('Customize surface contrast and visual style',
+                            style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Theme & Appearance',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: AppTheme.darkText,
-                          fontWeight: FontWeight.bold,
+              const SizedBox(height: 20),
+              Text('Theme Palette', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              ...List.generate(_themes.length, (i) {
+                final selected = _themeIndex == i;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: selected ? AppTheme.accentAmber.withOpacity(0.1) : AppTheme.darkBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: selected ? AppTheme.accentAmber : AppTheme.darkBorder),
+                  ),
+                  child: ListTile(
+                    dense: true,
+                    title: Text(_themes[i],
+                        style: TextStyle(
+                          color: selected ? AppTheme.accentAmber : AppTheme.darkText,
+                          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                          fontSize: 13,
                         )),
-                    Text('Customize surface contrast and visual style',
-                        style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
-                  ],
+                    trailing: selected
+                        ? const Icon(Icons.check_circle_rounded, color: AppTheme.accentAmber, size: 20)
+                        : const Icon(Icons.circle_outlined, color: AppTheme.darkTextMuted, size: 20),
+                    onTap: () => setState(() => _themeIndex = i),
+                  ),
+                );
+              }),
+              const SizedBox(height: 14),
+              Text('Accent Tone', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(_accents.length, (i) {
+                  final selected = _accentIndex == i;
+                  return GestureDetector(
+                    onTap: () => setState(() => _accentIndex = i),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: _accents[i],
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: selected ? Colors.white : Colors.transparent,
+                          width: 3,
+                        ),
+                        boxShadow: selected
+                            ? [BoxShadow(color: _accents[i].withOpacity(0.5), blurRadius: 10)]
+                            : [],
+                      ),
+                      child: selected ? const Icon(Icons.check, color: Colors.black, size: 20) : null,
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Reduce Micro-Animations', style: TextStyle(color: AppTheme.darkText, fontSize: 13, fontWeight: FontWeight.w600)),
+                subtitle: const Text('Streamline transitions for optimal battery life', style: TextStyle(color: AppTheme.darkTextMuted, fontSize: 11)),
+                value: _reduceMotion,
+                activeColor: AppTheme.accentAmber,
+                onChanged: (v) => setState(() => _reduceMotion = v),
+              ),
+              const SizedBox(height: 22),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.accentAmber,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Appearance preferences applied.'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  child: const Text('Apply Theme', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Text('Theme Palette', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          ...List.generate(_themes.length, (i) {
-            final selected = _themeIndex == i;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: selected ? AppTheme.accentAmber.withOpacity(0.1) : AppTheme.darkBackground,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: selected ? AppTheme.accentAmber : AppTheme.darkBorder),
-              ),
-              child: ListTile(
-                dense: true,
-                title: Text(_themes[i],
-                    style: TextStyle(
-                      color: selected ? AppTheme.accentAmber : AppTheme.darkText,
-                      fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                      fontSize: 13,
-                    )),
-                trailing: selected
-                    ? const Icon(Icons.check_circle_rounded, color: AppTheme.accentAmber, size: 20)
-                    : const Icon(Icons.circle_outlined, color: AppTheme.darkTextMuted, size: 20),
-                onTap: () => setState(() => _themeIndex = i),
-              ),
-            );
-          }),
-          const SizedBox(height: 14),
-          Text('Accent Tone', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_accents.length, (i) {
-              final selected = _accentIndex == i;
-              return GestureDetector(
-                onTap: () => setState(() => _accentIndex = i),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: _accents[i],
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: selected ? Colors.white : Colors.transparent,
-                      width: 3,
-                    ),
-                    boxShadow: selected
-                        ? [BoxShadow(color: _accents[i].withOpacity(0.5), blurRadius: 10)]
-                        : [],
-                  ),
-                  child: selected ? const Icon(Icons.check, color: Colors.black, size: 20) : null,
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 16),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Reduce Micro-Animations', style: TextStyle(color: AppTheme.darkText, fontSize: 13, fontWeight: FontWeight.w600)),
-            subtitle: const Text('Streamline transitions for optimal battery life', style: TextStyle(color: AppTheme.darkTextMuted, fontSize: 11)),
-            value: _reduceMotion,
-            activeColor: AppTheme.accentAmber,
-            onChanged: (v) => setState(() => _reduceMotion = v),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentAmber,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Appearance preferences applied.'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              child: const Text('Apply Theme', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -743,115 +767,124 @@ class _DataPrivacySheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(child: _sheetHandle()),
-          const SizedBox(height: 18),
-          Row(
+    return SafeArea(
+      top: false,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 36),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.errorRed.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.security_rounded, color: AppTheme.errorRed, size: 22),
+              Center(child: _sheetHandle()),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.errorRed.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.security_rounded, color: AppTheme.errorRed, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Data & Privacy',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: AppTheme.darkText,
+                              fontWeight: FontWeight.bold,
+                            )),
+                        Text('Transparency and control over your lifestyle data',
+                            style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppTheme.darkBorder),
+                ),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Data & Privacy',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: AppTheme.darkText,
-                          fontWeight: FontWeight.bold,
-                        )),
-                    Text('Transparency and control over your lifestyle data',
-                        style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
+                    const Icon(Icons.lock_outline_rounded, color: AppTheme.successGreen, size: 22),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Your habit entries and carbon calculations are end-to-end encrypted. We strictly do not sell, monetize, or disclose student lifestyle logs to any external third parties.',
+                        style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted, height: 1.4),
+                      ),
+                    ),
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+              _actionTile(
+                icon: Icons.download_rounded,
+                title: 'Export My Personal Data',
+                subtitle: 'Download or copy a portable JSON archive of your records',
+                onTap: () {
+                  final exportData = {
+                    'app': 'EcoLife',
+                    'user': {
+                      'id': user?.id,
+                      'name': user?.name,
+                      'email': user?.email,
+                      'points': user?.points,
+                      'streakDays': user?.streakDays,
+                      'badges': user?.badgesCount,
+                    },
+                    'impact': {
+                      'savedCarbonKg': savedKg,
+                    },
+                    'exportedAt': DateTime.now().toIso8601String(),
+                  };
+                  final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
+                  _showExportDialog(context, jsonStr);
+                },
+              ),
+              _actionTile(
+                icon: Icons.cleaning_services_rounded,
+                title: 'Clear Local Cache',
+                subtitle: 'Free offline cached chart data and temporary files',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: AppTheme.successGreen,
+                      behavior: SnackBarBehavior.floating,
+                      content: Row(
+                        children: const [
+                          Icon(Icons.check_circle_rounded, color: Colors.black, size: 20),
+                          SizedBox(width: 10),
+                          Text('Temporary cache cleared (14.2 MB freed).', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              _actionTile(
+                icon: Icons.policy_rounded,
+                title: 'Privacy Policy & Terms',
+                subtitle: 'Read our full university research & GDPR privacy terms',
+                onTap: () => _showPrivacyPolicyDialog(context),
+              ),
             ],
           ),
-          const SizedBox(height: 18),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppTheme.darkBorder),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.lock_outline_rounded, color: AppTheme.successGreen, size: 22),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Your habit entries and carbon calculations are end-to-end encrypted. We strictly do not sell, monetize, or disclose student lifestyle logs to any external third parties.',
-                    style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted, height: 1.4),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _actionTile(
-            icon: Icons.download_rounded,
-            title: 'Export My Personal Data',
-            subtitle: 'Download or copy a portable JSON archive of your records',
-            onTap: () {
-              final exportData = {
-                'app': 'EcoLife',
-                'user': {
-                  'id': user?.id,
-                  'name': user?.name,
-                  'email': user?.email,
-                  'points': user?.points,
-                  'streakDays': user?.streakDays,
-                  'badges': user?.badgesCount,
-                },
-                'impact': {
-                  'savedCarbonKg': savedKg,
-                },
-                'exportedAt': DateTime.now().toIso8601String(),
-              };
-              final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
-              _showExportDialog(context, jsonStr);
-            },
-          ),
-          _actionTile(
-            icon: Icons.cleaning_services_rounded,
-            title: 'Clear Local Cache',
-            subtitle: 'Free offline cached chart data and temporary files',
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: AppTheme.successGreen,
-                  behavior: SnackBarBehavior.floating,
-                  content: Row(
-                    children: const [
-                      Icon(Icons.check_circle_rounded, color: Colors.black, size: 20),
-                      SizedBox(width: 10),
-                      Text('Temporary cache cleared (14.2 MB freed).', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          _actionTile(
-            icon: Icons.policy_rounded,
-            title: 'Privacy Policy & Terms',
-            subtitle: 'Read our full university research & GDPR privacy terms',
-            onTap: () => _showPrivacyPolicyDialog(context),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -981,15 +1014,17 @@ class _SdgImpactReportSheet extends StatelessWidget {
       maxChildSize: 0.95,
       minChildSize: 0.5,
       expand: false,
-      builder: (ctx, scrollController) => Container(
-        decoration: const BoxDecoration(
-          color: AppTheme.darkBackground,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-        ),
-        child: ListView(
-          controller: scrollController,
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
-          children: [
+      builder: (ctx, scrollController) => SafeArea(
+        top: false,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: AppTheme.darkBackground,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          child: ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 36),
+            children: [
             Center(child: _sheetHandle()),
             const SizedBox(height: 18),
             Row(
@@ -1114,8 +1149,9 @@ class _SdgImpactReportSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _metricBadge(String top, String bottom, Color color) {
     return Column(
@@ -1194,110 +1230,119 @@ class _AboutEcoLifeSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          _sheetHandle(),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [AppTheme.primaryGreen, AppTheme.secondaryTeal],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryGreen.withOpacity(0.3),
-                  blurRadius: 18,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(Icons.eco_rounded, size: 38, color: Colors.black),
-          ),
-          const SizedBox(height: 12),
-          Text('EcoLife', style: theme.textTheme.headlineMedium?.copyWith(color: AppTheme.darkText, fontWeight: FontWeight.bold)),
-          Text('Version 1.0.0 (Build 2026.11)', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
-          const SizedBox(height: 14),
-          const Text(
-            'Student Lifestyle Management Tracker with Carbon Emission Tracking\nMinor Academic Project at Bhagwan Parshuram Institute of Technology (BPIT)',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppTheme.darkTextMuted, fontSize: 12, height: 1.5),
-          ),
-          const SizedBox(height: 18),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppTheme.darkBorder),
-            ),
-            child: Column(
-              children: [
-                _devRow('Pragyan Kumar', 'Lead Flutter & Full-Stack Developer'),
-                const Divider(color: AppTheme.darkBorder, height: 16),
-                _devRow('Mannan Jain', 'ML & Data Systems Engineer'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            alignment: WrapAlignment.center,
-            children: const [
-              _ChipBadge(label: 'Flutter 3.x'),
-              _ChipBadge(label: 'Riverpod'),
-              _ChipBadge(label: 'Node.js & Express'),
-              _ChipBadge(label: 'MongoDB'),
-              _ChipBadge(label: 'Python ML'),
-              _ChipBadge(label: 'Scikit-Learn'),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
+    return SafeArea(
+      top: false,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 36),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.darkText,
-                    side: const BorderSide(color: AppTheme.darkBorder),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              _sheetHandle(),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [AppTheme.primaryGreen, AppTheme.secondaryTeal],
                   ),
-                  onPressed: () {
-                    showLicensePage(
-                      context: context,
-                      applicationName: 'EcoLife',
-                      applicationVersion: '1.0.0',
-                      applicationLegalese: 'MIT License © 2026 EcoLife Contributors',
-                    );
-                  },
-                  child: const Text('Open Licenses'),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryGreen.withOpacity(0.3),
+                      blurRadius: 18,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.eco_rounded, size: 38, color: Colors.black),
+              ),
+              const SizedBox(height: 12),
+              Text('EcoLife', style: theme.textTheme.headlineMedium?.copyWith(color: AppTheme.darkText, fontWeight: FontWeight.bold)),
+              Text('Version 1.0.0 (Build 2026.11)', style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
+              const SizedBox(height: 14),
+              const Text(
+                'Student Lifestyle Management Tracker with Carbon Emission Tracking\nMinor Academic Project at Bhagwan Parshuram Institute of Technology (BPIT)',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppTheme.darkTextMuted, fontSize: 12, height: 1.5),
+              ),
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBackground,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppTheme.darkBorder),
+                ),
+                child: Column(
+                  children: [
+                    _devRow('Pragyan Kumar', 'Lead Flutter & Full-Stack Developer'),
+                    const Divider(color: AppTheme.darkBorder, height: 16),
+                    _devRow('Mannan Jain', 'ML & Data Systems Engineer'),
+                  ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryGreen,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                alignment: WrapAlignment.center,
+                children: const [
+                  _ChipBadge(label: 'Flutter 3.x'),
+                  _ChipBadge(label: 'Riverpod'),
+                  _ChipBadge(label: 'Node.js & Express'),
+                  _ChipBadge(label: 'MongoDB'),
+                  _ChipBadge(label: 'Python ML'),
+                  _ChipBadge(label: 'Scikit-Learn'),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.darkText,
+                        side: const BorderSide(color: AppTheme.darkBorder),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        showLicensePage(
+                          context: context,
+                          applicationName: 'EcoLife',
+                          applicationVersion: '1.0.0',
+                          applicationLegalese: 'MIT License © 2026 EcoLife Contributors',
+                        );
+                      },
+                      child: const Text('Open Licenses'),
+                    ),
                   ),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('You are running the latest version!'), behavior: SnackBarBehavior.floating),
-                    );
-                  },
-                  child: const Text('Check Updates', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGreen,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('You are running the latest version!'), behavior: SnackBarBehavior.floating),
+                        );
+                      },
+                      child: const Text('Check Updates', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1345,62 +1390,71 @@ class _AccountSettingsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 30),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(child: _sheetHandle()),
-          const SizedBox(height: 18),
-          Row(
+    return SafeArea(
+      top: false,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 36),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.manage_accounts_rounded, color: AppTheme.primaryGreen, size: 22),
+              Center(child: _sheetHandle()),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreen.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.manage_accounts_rounded, color: AppTheme.primaryGreen, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Account Details',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: AppTheme.darkText,
+                              fontWeight: FontWeight.bold,
+                            )),
+                        Text('Verified student profile & identity',
+                            style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Account Details',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: AppTheme.darkText,
-                          fontWeight: FontWeight.bold,
-                        )),
-                    Text('Verified student profile & identity',
-                        style: theme.textTheme.bodySmall?.copyWith(color: AppTheme.darkTextMuted)),
-                  ],
+              const SizedBox(height: 20),
+              _detailItem('Full Name', user?.name ?? 'Guest User'),
+              _detailItem('Email Address', user?.email ?? 'Not logged in'),
+              _detailItem('Account Identifier', user?.id.isNotEmpty == true ? user!.id : 'offline-guest'),
+              _detailItem('EcoPoints Balance', '${user?.points ?? 0} points'),
+              _detailItem('Status', 'Verified Student Scholar 🎓'),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryGreen,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          _detailItem('Full Name', user?.name ?? 'Guest User'),
-          _detailItem('Email Address', user?.email ?? 'Not logged in'),
-          _detailItem('Account Identifier', user?.id.isNotEmpty == true ? user!.id : 'offline-guest'),
-          _detailItem('EcoPoints Balance', '${user?.points ?? 0} points'),
-          _detailItem('Status', 'Verified Student Scholar 🎓'),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
