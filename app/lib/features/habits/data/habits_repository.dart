@@ -139,12 +139,22 @@ class HabitsRepository {
       case 'Sleep (6–9h)':
         return {'sleep': {'hours': value}};
       case 'Healthy Meal':
-        return {'diet': {'meals': value.round()}};
+        // Send both the meals count and a reasonable mealType so the backend
+        // can compute the checklist flag.
+        final meals = value.round();
+        return {
+          'diet': {
+            'meals': meals,
+            'mealsLogged': meals,
+            'mealType': meals >= 2 ? 'mixed' : 'vegan',
+          }
+        };
       case 'Exercise (30 min)':
         return {'exercise': {'durationMins': value.round()}};
       case 'Screen Time < 4h':
         return {'screenTime': {'hours': value}};
       case 'Water (8 glasses)':
+        // Sent as top-level 'water' key; the backend merges it into diet.waterGlasses.
         return {'water': {'glasses': value.round()}};
       default:
         return {'habit': habit, 'value': value};

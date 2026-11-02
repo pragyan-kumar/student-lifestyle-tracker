@@ -270,7 +270,23 @@ exports.toggleChecklist = async (req, res) => {
 // POST /api/v1/habits
 exports.createLog = async (req, res) => {
   try {
-    const { sleep, diet, exercise, screenTime } = req.body;
+    // Extract all supported fields from the payload.
+    // The Flutter client sends habit-specific fields:
+    //   sleep: {hours: N}, diet: {meals: N, mealType: str}, exercise: {durationMins: N},
+    //   screenTime: {hours: N}, water: {glasses: N}
+    let { sleep, diet, exercise, screenTime, water } = req.body;
+
+    // Normalise diet: merge water.glasses → diet.waterGlasses
+    // and handle meals count sent by the slider (no mealType in that path)
+    diet = diet || {};
+    if (water?.glasses != null) {
+      diet.waterGlasses = Number(water.glasses);
+    }
+    // If meals count is provided but mealType is missing, infer a healthy type
+    if (diet.meals != null && diet.mealType == null) {
+      diet.mealsLogged = Number(diet.meals);
+      diet.mealType = diet.mealsLogged >= 2 ? 'mixed' : 'vegan';
+    }
 
     // Compute flags
     const flags = detectFlags({ sleep, diet, exercise, screenTime });
@@ -283,14 +299,23 @@ exports.createLog = async (req, res) => {
       flags,
     });
 
+    // Determine checklist completion:
+    // A habit is marked done when the user explicitly logs a value (any value),
+    // NOT based on whether it falls inside a recommended range — that would silently
+    // ignore slider inputs (e.g. 3 hours of sleep is a real log, it should count).
     const checklist = {
-      "Sleep (6–9h)": !!(sleep?.hours >= 6 && sleep?.hours <= 9),
-      "Healthy Meal": !!(diet?.mealType && diet?.mealType !== "meat_heavy"),
-      "Exercise (30 min)": !!(exercise?.durationMins >= 30),
-      "Screen Time < 4h": !!(
-        screenTime?.hours != null && screenTime?.hours <= 4
-      ),
-      "Water (8 glasses)": !!((diet?.waterGlasses || 0) >= 8),
+      // Sleep: done whenever hours were logged (value > 0 means deliberate action)
+      "Sleep (6–9h)": sleep?.hours != null && sleep.hours > 0,
+      // Diet / Healthy Meal: done when mealsLogged >= 1 OR a non-meat mealType was selected
+      "Healthy Meal":
+        (diet?.mealsLogged != null && diet.mealsLogged >= 1) ||
+        !!(diet?.mealType && diet.mealType !== 'meat_heavy'),
+      // Exercise: done when any duration > 0 was logged
+      "Exercise (30 min)": exercise?.durationMins != null && exercise.durationMins > 0,
+      // Screen time: done when logged (any value tracked is informative)
+      "Screen Time < 4h": screenTime?.hours != null && screenTime.hours >= 0,
+      // Water: done when any glasses were logged
+      "Water (8 glasses)": (diet?.waterGlasses || 0) > 0,
     };
 
     const log = await HabitLog.create({
@@ -337,6 +362,10 @@ exports.createLog = async (req, res) => {
       logger.warn("Background Firebase RTDB sync failed:", err.message),
     );
 
+    const completedCount = Object.values(checklist).filter(Boolean).length;
+    const totalCount = 5;
+    const percent = Math.round((completedCount / totalCount) * 100);
+
     logger.info(
       `Habit log created for user ${req.user._id}, +${pointsEarned} pts, streak: ${user?.streakDays || 1}`,
     );
@@ -345,8 +374,16 @@ exports.createLog = async (req, res) => {
       .json({
         log,
         checklist,
+        completedCount,
+        totalCount,
+        percent,
         pointsEarned,
         streakDays: user?.streakDays || 1,
+        // Include user object so the Flutter client can update points/streak
+        user: {
+          points: user?.points || 0,
+          streakDays: user?.streakDays || 1,
+        },
       });
   } catch (err) {
     logger.error("Create habit log error:", err);
