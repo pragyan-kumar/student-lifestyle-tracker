@@ -6,6 +6,7 @@ import '../../../core/network/dio_client.dart';
 /// Represents today's habit checklist state and stats.
 class HabitChecklistData {
   final Map<String, bool> checklist;
+  final Map<String, double> values;
   final int completedCount;
   final int totalCount;
   final int percent;
@@ -15,6 +16,7 @@ class HabitChecklistData {
 
   const HabitChecklistData({
     required this.checklist,
+    this.values = const {},
     this.completedCount = 0,
     this.totalCount = 5,
     this.percent = 0,
@@ -31,6 +33,7 @@ class HabitChecklistData {
           'Screen Time < 4h': false,
           'Water (8 glasses)': false,
         },
+        values: {},
         completedCount: 0,
         totalCount: 5,
         percent: 0,
@@ -53,8 +56,42 @@ class HabitChecklistData {
 
     final userObj = json['user'] as Map<String, dynamic>?;
 
+    final logObj = json['log'] as Map<String, dynamic>? ?? json;
+    final Map<String, double> values = {};
+
+    final sleepObj = logObj['sleep'] as Map<String, dynamic>?;
+    final sleepHours = sleepObj?['hours'];
+    if (sleepHours is num && sleepHours > 0) {
+      values['Sleep (6–9h)'] = sleepHours.toDouble();
+    }
+
+    final dietObj = logObj['diet'] as Map<String, dynamic>?;
+    final meals = dietObj?['mealsLogged'] ?? dietObj?['meals'];
+    if (meals is num && meals > 0) {
+      values['Healthy Meal'] = meals.toDouble();
+    }
+
+    final exObj = logObj['exercise'] as Map<String, dynamic>?;
+    final exerciseMins = exObj?['durationMins'];
+    if (exerciseMins is num && exerciseMins > 0) {
+      values['Exercise (30 min)'] = exerciseMins.toDouble();
+    }
+
+    final screenObj = logObj['screenTime'] as Map<String, dynamic>?;
+    final screenHours = screenObj?['hours'];
+    if (screenHours is num && screenHours >= 0) {
+      values['Screen Time < 4h'] = screenHours.toDouble();
+    }
+
+    final waterGlasses = dietObj?['waterGlasses'] ??
+        (logObj['water'] as Map<String, dynamic>?)?['glasses'];
+    if (waterGlasses is num && waterGlasses > 0) {
+      values['Water (8 glasses)'] = waterGlasses.toDouble();
+    }
+
     return HabitChecklistData(
       checklist: checklist,
+      values: values,
       completedCount: (json['completedCount'] as num?)?.toInt() ?? completed,
       totalCount: (json['totalCount'] as num?)?.toInt() ?? total,
       percent: percent,
@@ -66,6 +103,7 @@ class HabitChecklistData {
 
   HabitChecklistData copyWith({
     Map<String, bool>? checklist,
+    Map<String, double>? values,
     int? completedCount,
     int? totalCount,
     int? percent,
@@ -75,6 +113,7 @@ class HabitChecklistData {
   }) {
     return HabitChecklistData(
       checklist: checklist ?? this.checklist,
+      values: values ?? this.values,
       completedCount: completedCount ?? this.completedCount,
       totalCount: totalCount ?? this.totalCount,
       percent: percent ?? this.percent,
@@ -119,8 +158,6 @@ class HabitsRepository {
       final res = await _dio.post('/habits/log', data: payload);
       if (res.statusCode == 200 || res.statusCode == 201) {
         if (res.data is Map<String, dynamic>) {
-          // Some backends return the full checklist, others return the log entry.
-          // Try to parse as checklist data; fall back to toggling done.
           final data = res.data as Map<String, dynamic>;
           if (data.containsKey('checklist')) {
             return HabitChecklistData.fromJson(data);
@@ -134,13 +171,53 @@ class HabitsRepository {
     return toggleHabit(habit, true);
   }
 
+  /// Submits full habit log entry for today with all tracked categories.
+  Future<HabitChecklistData> logFullHabits({
+    required double sleepHours,
+    required String sleepQuality,
+    required int meals,
+    required String mealType,
+    required int waterGlasses,
+    required int exerciseMins,
+    required String exerciseType,
+    required double screenHours,
+  }) async {
+    final payload = {
+      'sleep': {
+        'hours': sleepHours,
+        'quality': sleepQuality,
+      },
+      'diet': {
+        'meals': meals,
+        'mealsLogged': meals,
+        'mealType': mealType,
+        'waterGlasses': waterGlasses,
+      },
+      'water': {
+        'glasses': waterGlasses,
+      },
+      'exercise': {
+        'durationMins': exerciseMins,
+        'type': exerciseType,
+        'completed': exerciseMins > 0,
+      },
+      'screenTime': {
+        'hours': screenHours,
+      },
+    };
+
+    final res = await _dio.post('/habits/log', data: payload);
+    if (res.data is Map<String, dynamic>) {
+      return HabitChecklistData.fromJson(res.data as Map<String, dynamic>);
+    }
+    return getTodayHabits();
+  }
+
   static Map<String, dynamic> _buildPayload(String habit, double value) {
     switch (habit) {
       case 'Sleep (6–9h)':
         return {'sleep': {'hours': value}};
       case 'Healthy Meal':
-        // Send both the meals count and a reasonable mealType so the backend
-        // can compute the checklist flag.
         final meals = value.round();
         return {
           'diet': {
@@ -154,7 +231,6 @@ class HabitsRepository {
       case 'Screen Time < 4h':
         return {'screenTime': {'hours': value}};
       case 'Water (8 glasses)':
-        // Sent as top-level 'water' key; the backend merges it into diet.waterGlasses.
         return {'water': {'glasses': value.round()}};
       default:
         return {'habit': habit, 'value': value};

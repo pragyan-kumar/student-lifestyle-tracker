@@ -61,25 +61,25 @@ exports.getToday = async (req, res) => {
     }).sort({ createdAt: -1 });
 
     const checklist = {
-      "Sleep (6–9h)": !!(
-        log?.checklist?.["Sleep (6–9h)"] ??
-        (log?.sleep?.hours >= 6 && log?.sleep?.hours <= 9)
+      "Sleep (6–9h)": Boolean(
+        log?.checklist?.["Sleep (6–9h)"] ||
+        (log?.sleep?.hours != null && log?.sleep?.hours > 0)
       ),
-      "Healthy Meal": !!(
-        log?.checklist?.["Healthy Meal"] ??
-        (log?.diet?.mealType && log?.diet?.mealType !== "meat_heavy")
+      "Healthy Meal": Boolean(
+        log?.checklist?.["Healthy Meal"] ||
+        (log?.diet?.mealsLogged >= 1 || (log?.diet?.mealType && log?.diet?.mealType !== "meat_heavy"))
       ),
-      "Exercise (30 min)": !!(
-        log?.checklist?.["Exercise (30 min)"] ??
-        log?.exercise?.durationMins >= 30
+      "Exercise (30 min)": Boolean(
+        log?.checklist?.["Exercise (30 min)"] ||
+        (log?.exercise?.durationMins != null && log?.exercise?.durationMins > 0)
       ),
-      "Screen Time < 4h": !!(
-        log?.checklist?.["Screen Time < 4h"] ??
-        (log?.screenTime?.hours != null && log?.screenTime?.hours <= 4)
+      "Screen Time < 4h": Boolean(
+        log?.checklist?.["Screen Time < 4h"] ||
+        (log?.screenTime?.hours != null && log?.screenTime?.hours >= 0)
       ),
-      "Water (8 glasses)": !!(
-        log?.checklist?.["Water (8 glasses)"] ??
-        (log?.diet?.waterGlasses || 0) >= 8
+      "Water (8 glasses)": Boolean(
+        log?.checklist?.["Water (8 glasses)"] ||
+        (log?.diet?.waterGlasses || 0) > 0
       ),
     };
 
@@ -146,24 +146,41 @@ exports.toggleChecklist = async (req, res) => {
       done === undefined ? !log.checklist[canonicalKey] : Boolean(done);
     log.checklist[canonicalKey] = isDone;
 
-    // Sync corresponding field values
+    // Sync corresponding field values without clobbering user-entered values
     if (canonicalKey === "Sleep (6–9h)") {
-      log.sleep = isDone
-        ? { hours: 8, quality: "good", bedtime: "23:00", wakeTime: "07:00" }
-        : { hours: 0, quality: null };
+      if (!isDone) {
+        log.sleep = { hours: 0, quality: null };
+      } else if (!log.sleep?.hours || log.sleep.hours === 0) {
+        log.sleep = { hours: 8, quality: "good", bedtime: "23:00", wakeTime: "07:00" };
+      }
     } else if (canonicalKey === "Healthy Meal") {
       log.diet = log.diet || {};
-      log.diet.mealType = isDone ? "vegan" : null;
-      log.diet.mealsLogged = isDone ? 1 : 0;
+      if (!isDone) {
+        log.diet.mealType = null;
+        log.diet.mealsLogged = 0;
+      } else if (!log.diet.mealsLogged && !log.diet.mealType) {
+        log.diet.mealType = "vegan";
+        log.diet.mealsLogged = 1;
+      }
     } else if (canonicalKey === "Exercise (30 min)") {
-      log.exercise = isDone
-        ? { durationMins: 30, completed: true, type: "walk" }
-        : { durationMins: 0, completed: false };
+      if (!isDone) {
+        log.exercise = { durationMins: 0, completed: false };
+      } else if (!log.exercise?.durationMins) {
+        log.exercise = { durationMins: 30, completed: true, type: "walk" };
+      }
     } else if (canonicalKey === "Screen Time < 4h") {
-      log.screenTime = isDone ? { hours: 3 } : { hours: null };
+      if (!isDone) {
+        log.screenTime = { hours: null };
+      } else if (log.screenTime?.hours == null) {
+        log.screenTime = { hours: 3 };
+      }
     } else if (canonicalKey === "Water (8 glasses)") {
       log.diet = log.diet || {};
-      log.diet.waterGlasses = isDone ? 8 : 0;
+      if (!isDone) {
+        log.diet.waterGlasses = 0;
+      } else if (!log.diet.waterGlasses) {
+        log.diet.waterGlasses = 8;
+      }
     }
 
     // Recalculate flags
@@ -251,6 +268,7 @@ exports.toggleChecklist = async (req, res) => {
       success: true,
       habit: canonicalKey,
       done: isDone,
+      log,
       checklist: currentChecklist,
       completedCount,
       totalCount,
@@ -288,46 +306,90 @@ exports.createLog = async (req, res) => {
       diet.mealType = diet.mealsLogged >= 2 ? 'mixed' : 'vegan';
     }
 
-    // Compute flags
-    const flags = detectFlags({ sleep, diet, exercise, screenTime });
-    // Compute points earned
-    const pointsEarned = calculateHabitPoints({
-      sleep,
-      diet,
-      exercise,
-      screenTime,
-      flags,
-    });
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    let log = await HabitLog.findOne({
+      userId: req.user._id,
+      date: { $gte: start, $lte: end },
+    }).sort({ createdAt: -1 });
+
+    if (!log) {
+      log = new HabitLog({
+        userId: req.user._id,
+        date: new Date(),
+        checklist: {},
+      });
+    }
+
+    if (!log.checklist) {
+      log.checklist = {};
+    }
+
+    // Merge incoming fields
+    if (sleep) {
+      const prevSleep = log.sleep ? (log.sleep.toObject ? log.sleep.toObject() : log.sleep) : {};
+      log.sleep = { ...prevSleep, ...sleep };
+    }
+    if (diet && Object.keys(diet).length > 0) {
+      const prevDiet = log.diet ? (log.diet.toObject ? log.diet.toObject() : log.diet) : {};
+      log.diet = { ...prevDiet, ...diet };
+    }
+    if (exercise) {
+      const prevEx = log.exercise ? (log.exercise.toObject ? log.exercise.toObject() : log.exercise) : {};
+      log.exercise = { ...prevEx, ...exercise };
+    }
+    if (screenTime) {
+      const prevScreen = log.screenTime ? (log.screenTime.toObject ? log.screenTime.toObject() : log.screenTime) : {};
+      log.screenTime = { ...prevScreen, ...screenTime };
+    }
 
     // Determine checklist completion:
-    // A habit is marked done when the user explicitly logs a value (any value),
-    // NOT based on whether it falls inside a recommended range — that would silently
-    // ignore slider inputs (e.g. 3 hours of sleep is a real log, it should count).
-    const checklist = {
-      // Sleep: done whenever hours were logged (value > 0 means deliberate action)
-      "Sleep (6–9h)": sleep?.hours != null && sleep.hours > 0,
-      // Diet / Healthy Meal: done when mealsLogged >= 1 OR a non-meat mealType was selected
-      "Healthy Meal":
-        (diet?.mealsLogged != null && diet.mealsLogged >= 1) ||
-        !!(diet?.mealType && diet.mealType !== 'meat_heavy'),
-      // Exercise: done when any duration > 0 was logged
-      "Exercise (30 min)": exercise?.durationMins != null && exercise.durationMins > 0,
-      // Screen time: done when logged (any value tracked is informative)
-      "Screen Time < 4h": screenTime?.hours != null && screenTime.hours >= 0,
-      // Water: done when any glasses were logged
-      "Water (8 glasses)": (diet?.waterGlasses || 0) > 0,
-    };
+    // A habit is marked done when the user explicitly logs a value (any value > 0)
+    if (log.sleep?.hours != null && log.sleep.hours > 0) {
+      log.checklist["Sleep (6–9h)"] = true;
+    }
+    if ((log.diet?.mealsLogged != null && log.diet.mealsLogged >= 1) || (log.diet?.mealType && log.diet.mealType !== 'meat_heavy')) {
+      log.checklist["Healthy Meal"] = true;
+    }
+    if (log.exercise?.durationMins != null && log.exercise.durationMins > 0) {
+      log.checklist["Exercise (30 min)"] = true;
+    }
+    if (log.screenTime?.hours != null && log.screenTime.hours >= 0) {
+      log.checklist["Screen Time < 4h"] = true;
+    }
+    if ((log.diet?.waterGlasses || 0) > 0) {
+      log.checklist["Water (8 glasses)"] = true;
+    }
 
-    const log = await HabitLog.create({
-      userId: req.user._id,
-      sleep,
-      diet,
-      exercise,
-      screenTime,
-      flags,
-      checklist,
-      pointsEarned,
+    // Compute flags
+    log.flags = detectFlags({
+      sleep: log.sleep,
+      diet: log.diet,
+      exercise: log.exercise,
+      screenTime: log.screenTime,
     });
+
+    // Compute points earned
+    const previousPoints = log.pointsEarned || 0;
+    const newPoints = calculateHabitPoints({
+      sleep: log.sleep,
+      diet: log.diet,
+      exercise: log.exercise,
+      screenTime: log.screenTime,
+      flags: log.flags,
+    });
+    log.pointsEarned = newPoints;
+    const pointDelta = newPoints - previousPoints;
+
+    log.markModified("checklist");
+    log.markModified("sleep");
+    log.markModified("diet");
+    log.markModified("exercise");
+    log.markModified("screenTime");
+    await log.save();
 
     // Update streak and user points
     const user = await User.findById(req.user._id);
@@ -338,13 +400,15 @@ exports.createLog = async (req, res) => {
       );
       user.streakDays = newStreak;
       user.lastActivityDate = new Date();
-      user.points = (user.points || 0) + pointsEarned;
+      if (pointDelta > 0) {
+        user.points = (user.points || 0) + pointDelta;
+      }
       await user.save();
 
       // Record point history for the new log
-      if (pointsEarned > 0) {
+      if (pointDelta > 0) {
         recordPoints(req.user._id, {
-          amount: pointsEarned,
+          amount: pointDelta,
           type: 'habit',
           label: '📝 Daily habit log recorded',
           refModel: 'HabitLog',
@@ -353,33 +417,40 @@ exports.createLog = async (req, res) => {
       }
     }
 
+    const currentChecklist = {
+      "Sleep (6–9h)": Boolean(log.checklist?.["Sleep (6–9h)"]),
+      "Healthy Meal": Boolean(log.checklist?.["Healthy Meal"]),
+      "Exercise (30 min)": Boolean(log.checklist?.["Exercise (30 min)"]),
+      "Screen Time < 4h": Boolean(log.checklist?.["Screen Time < 4h"]),
+      "Water (8 glasses)": Boolean(log.checklist?.["Water (8 glasses)"]),
+    };
+
     // Sync to Firebase RTDB
     syncHabitsToFirebase(req.user._id.toString(), {
-      checklist,
+      checklist: currentChecklist,
       habitLog: log,
       user,
     }).catch((err) =>
       logger.warn("Background Firebase RTDB sync failed:", err.message),
     );
 
-    const completedCount = Object.values(checklist).filter(Boolean).length;
+    const completedCount = Object.values(currentChecklist).filter(Boolean).length;
     const totalCount = 5;
     const percent = Math.round((completedCount / totalCount) * 100);
 
     logger.info(
-      `Habit log created for user ${req.user._id}, +${pointsEarned} pts, streak: ${user?.streakDays || 1}`,
+      `Habit log updated for user ${req.user._id}, +${pointDelta} pts, streak: ${user?.streakDays || 1}`,
     );
     res
-      .status(201)
+      .status(200)
       .json({
         log,
-        checklist,
+        checklist: currentChecklist,
         completedCount,
         totalCount,
         percent,
-        pointsEarned,
+        pointsEarned: log.pointsEarned,
         streakDays: user?.streakDays || 1,
-        // Include user object so the Flutter client can update points/streak
         user: {
           points: user?.points || 0,
           streakDays: user?.streakDays || 1,

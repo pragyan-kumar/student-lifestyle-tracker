@@ -82,6 +82,40 @@ class HabitsNotifier extends AsyncNotifier<HabitChecklistData> {
       ));
     }
   }
+
+  Future<void> logFullHabits({
+    required double sleepHours,
+    required String sleepQuality,
+    required int meals,
+    required String mealType,
+    required int waterGlasses,
+    required int exerciseMins,
+    required String exerciseType,
+    required double screenHours,
+  }) async {
+    try {
+      final repo = ref.read(habitsRepositoryProvider);
+      final updated = await repo.logFullHabits(
+        sleepHours: sleepHours,
+        sleepQuality: sleepQuality,
+        meals: meals,
+        mealType: mealType,
+        waterGlasses: waterGlasses,
+        exerciseMins: exerciseMins,
+        exerciseType: exerciseType,
+        screenHours: screenHours,
+      );
+      state = AsyncData(updated);
+      ref.invalidate(dashboardSummaryProvider);
+      if (updated.userPoints != null) {
+        ref.invalidate(authProvider);
+        ref.invalidate(walletProvider);
+      }
+    } catch (e) {
+      print('[HabitsProvider] logFullHabits error: $e');
+      await refresh();
+    }
+  }
 }
 
 final habitsProvider =

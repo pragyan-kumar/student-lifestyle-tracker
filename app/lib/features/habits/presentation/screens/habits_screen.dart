@@ -263,9 +263,11 @@ class _HabitsScreenState extends ConsumerState<HabitsScreen> {
                         _habitIcons[habitKey] ?? Icons.check_circle_outline;
 
                     return _HabitCheckTile(
+                      key: ValueKey(habitKey),
                       label: habitKey,
                       icon: icon,
                       done: isDone,
+                      currentValue: habitsData.values[habitKey],
                       delay: index * 50,
                       onToggle: (val) {
                         ref.read(habitsProvider.notifier).toggle(habitKey, val);
@@ -294,9 +296,11 @@ class _HabitsScreenState extends ConsumerState<HabitsScreen> {
 
 class _HabitCheckTile extends StatefulWidget {
   const _HabitCheckTile({
+    super.key,
     required this.label,
     required this.icon,
     required this.done,
+    this.currentValue,
     required this.onToggle,
     required this.onLogValue,
     required this.delay,
@@ -305,6 +309,7 @@ class _HabitCheckTile extends StatefulWidget {
   final String label;
   final IconData icon;
   final bool done;
+  final double? currentValue;
   final ValueChanged<bool> onToggle;
   final Future<void> Function(double) onLogValue;
   final int delay;
@@ -326,7 +331,7 @@ class _HabitCheckTileState extends State<_HabitCheckTile>
   void initState() {
     super.initState();
     _cfg = _configFor(widget.label);
-    _sliderValue = _defaultFor(widget.label);
+    _sliderValue = widget.currentValue ?? _defaultFor(widget.label);
     _animCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -335,6 +340,18 @@ class _HabitCheckTileState extends State<_HabitCheckTile>
       parent: _animCtrl,
       curve: Curves.easeInOutCubic,
     );
+  }
+
+  @override
+  void didUpdateWidget(_HabitCheckTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.currentValue != null &&
+        widget.currentValue != oldWidget.currentValue &&
+        !_saving) {
+      setState(() {
+        _sliderValue = widget.currentValue!;
+      });
+    }
   }
 
   @override
@@ -352,7 +369,6 @@ class _HabitCheckTileState extends State<_HabitCheckTile>
     setState(() => _saving = true);
     try {
       await widget.onLogValue(_sliderValue);
-      if (!widget.done) widget.onToggle(true);
       setState(() => _expanded = false);
       _animCtrl.reverse();
     } finally {
